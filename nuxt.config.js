@@ -43,6 +43,24 @@ export default {
     '@nuxtjs/axios',
     // https://go.nuxtjs.dev/pwa
     '@nuxtjs/pwa',
+    // https://firebase.nuxtjs.org/guide/getting-started/
+    [
+      '@nuxtjs/firebase',
+      {
+        config: {
+          apiKey: "AIzaSyCGZvZDWyjJdJMM3yRjTwkUg3g19Hgq6rI",
+          authDomain: "digital-idout.firebaseapp.com",
+          projectId: "digital-idout",
+          storageBucket: "digital-idout.appspot.com",
+          messagingSenderId: "397141445801",
+          appId: "1:397141445801:web:42b864b54ab5f7fef36db8",
+          measurementId: "G-7TLVQPRJFF"
+        },
+        services: {
+          auth: true // Just as example. Can be any other service.
+        }
+      }
+    ],
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
