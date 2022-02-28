@@ -2,12 +2,17 @@
   <v-card
     dark
     hover
+    :to="{
+      name: 'region-region-meta-meta', params: { region: $route.params.region, meta: id }
+    }"
   >
     <div class="d-flex flex-no-wrap justify-space-between">
       <div>
-        <v-chip small class="mt-4 ml-2">
-          {{ data.targetRole }}
-        </v-chip>
+        <div>
+          <v-chip small class="mt-4 ml-2">
+            {{ data.targetRole }}
+          </v-chip>
+        </div>
         <v-card-title
           class="text-h5 pt-0 d-inline-block text-truncate"
           v-text="data.title"
@@ -20,7 +25,7 @@
       </div>
 
       <v-avatar
-        v-if='data.files'
+        v-if='data.files.length'
         class="ma-3"
         size="111"
         tile
@@ -36,7 +41,8 @@ import { format } from 'date-fns'
 
 export default {
   props: {
-    data: { type: Object, required: true }
+    id: { type: String, required: true },
+    data: { type: Object, required: true },
   },
   computed: {
     datetime() {

@@ -10,9 +10,17 @@ let camera
 let controls
 let targets = []
 let regionsViewFlag = false
+let pickingMode = false // false: 通常モード, true: ROI作成
+let count = 0, point0_state = -1
+let _point
+let _pointArray = [], pointArray = [], lineArray = []
+
 const mastaba = []
 const polyArray = []
 const clock = new THREE.Clock()
+const discTexture = THREE.ImageUtils.loadTexture( '/img/disc.png' );
+const offset = 0.5;
+
 
 // three.jsの処理を書いていく
 export default class ThreeBrain {
@@ -23,6 +31,7 @@ export default class ThreeBrain {
     EventBus.$on("DRAW_REGIONS", this.drawRegions.bind(this));
     EventBus.$on("TOGGLE_REGIONS_VIEW", this.toggleRegionsView.bind(this));
     EventBus.$on("MOUSE_CLICK", this.mouseClick.bind(this));
+    EventBus.$on("TOGGLE_PICKING_MODE", this.togglePickingMode.bind(this));
   }
 
   init() {
@@ -235,7 +244,7 @@ export default class ThreeBrain {
 
   mouseMove(e) {
     const raycaster = new THREE.Raycaster()
-    // const target_v = null
+    // const targets = null
     const mouse = new THREE.Vector2()
 
     e.preventDefault();
@@ -245,59 +254,58 @@ export default class ThreeBrain {
     raycaster.set( camera.position, vector.sub( camera.position ).normalize())
 
     // 領域追加モード：ピッキング対象をモデルに
-    // if ($('#button_createtarget').hasClass('active')){
-    //   var intersects = raycaster.intersectObjects(mastaba, true);
-    // }
-
     // その他のモード：ピッキング対象を領域に
-    // else
-    const intersects = raycaster.intersectObjects(polyArray, true)
+    const intersects = raycaster.intersectObjects(pickingMode ? mastaba : polyArray, true)
 
     // if ($('#button_createtarget').hasClass('active')) {
-    //   if (intersects.length) {
-    //     target_v = intersects;
-    //     if(target_v[0].object.name == "point0" && count > 2 && point0_state < 0){
-    //       point0_state *= -1;
-    //       target_v[0].object.material.size = 5.0;
+    if (pickingMode) {
+      if (intersects.length) {
+        targets = intersects;
+        if(targets[0].object.name == "point0" && count > 2 && point0_state < 0){
+          point0_state *= -1;
+          targets[0].object.material.size = 5.0;
 
-    //     }else if(target_v[0].object.name != "point0" && point0_state > 0){
-    //       point0_state *= -1;
-    //       _pointArray[0].material.size = 3.0;
-    //     }
-    //   } else if (!intersects.length) {
-    //     target_v = null;
-    //   }
-    // }else if ($('#form_back').css('display') == 'none' && $('#infobox').css('display') == 'none' && infoload == 1) {
-    if (intersects.length > 0) {
-      if (!targets) {
-        targets = intersects
-        console.log(targets[0])
-        this.showTargets(targets)
-      } else if (intersects.length !== targets.length || intersects[0].object.name !== targets[0].object.name) {
-        this.hideTargets(targets)
-        targets = intersects
-        this.showTargets(targets)
-      }
-    } else if (targets) {
-        this.hideTargets(targets)
+        }else if(targets[0].object.name != "point0" && point0_state > 0){
+          point0_state *= -1;
+          _pointArray[0].material.size = 3.0;
+        }
+      } else if (!intersects.length) {
         targets = []
+      }
+    // }else if ($('#form_back').css('display') == 'none' && $('#infobox').css('display') == 'none' && infoload == 1) {
+    } else {
+      if (intersects.length > 0) {
+        if (!targets.length) {
+          targets = intersects
+          console.log(targets[0])
+          this.showTargets(targets)
+        } else if ((intersects.length !== targets.length || intersects[0].object.name !== targets[0].object.name) && targets[0].object.name !== "point0") {
+          this.hideTargets(targets)
+          targets = intersects
+          this.showTargets(targets)
+        }
+      } else if (targets.length) {
+        if (targets[0].object.name !== "point0") {
+          this.hideTargets(targets)
+          targets = []
+        }
+      }
     }
-    // }
     renderer.render(scene, camera);
   }
 
   mouseClick(e) {
-    console.log("wao");
+    console.log(0, targets)
     if(targets.length > 0) {
-      EventBus.$emit("PICK_REGIONS", targets)
+      console.log(1, targets)
+      if (pickingMode) {
+        console.log(2, targets)
+        this.createRegion()
+      } else if (targets[0].object.name !== "point0") {
+        console.log(3, targets)
+        EventBus.$emit("PICK_REGIONS", targets)
+      }
     }
-
-    // if ($('#button_createtarget').hasClass('active')) {
-    //   CreateTargetOBJ();
-    // } else if ($('#form_back').css('display') != 'none') {
-    // } else {
-    //   pop();
-    // }
   }
 
   showTargets(targets) {
@@ -329,8 +337,7 @@ export default class ThreeBrain {
   toggleRegionsView(flag) {
     regionsViewFlag = flag
 		if (regionsViewFlag) {
-			console.log("ok")
-			if (targets){
+			if (targets.length){
 				this.showTargets(targets)
 				// if($('#form_back').css('display') != 'none'){
 				// 	targetTopColor();
@@ -346,7 +353,7 @@ export default class ThreeBrain {
 				poly.material.visible = false
 				poly.parent.material.visible = false
       })
-			if (targets) {
+			if (targets.length) {
         targets.forEach(target => {
           target.object.parent.material.color.setHex(0xff0000)
         })
@@ -356,5 +363,100 @@ export default class ThreeBrain {
 				// }
 			}
 		}
+  }
+  togglePickingMode(flag) {
+    pickingMode = flag
+    this.resetCreateTarget()
+  }
+  createRegion() {
+    // ピッキング成功 & 入力受付中（処理中でない）
+    console.log(targets)
+    if (targets.length) {
+      // 最初の点が選ばれた時　－　初期化
+      if(count == 0){
+        _pointArray = new Array();
+        pointArray = new Array();
+        lineArray = new Array();
+      }
+      // 再び最初の点が選ばれた時　－　終了
+      if(targets[0].object.name == "point0" && count > 2 && point0_state > 0){
+        // 線を描く
+        var lg = new THREE.Geometry();
+        lg.vertices.push(_pointArray[count - 1].position);
+        lg.vertices.push(_pointArray[0].position);
+        lineArray[count] = new THREE.Line(lg, new THREE.LineBasicMaterial({
+          color : 0xff0000,
+          opacity : 0.5,
+          linewidth : 10
+        }));
+        scene.add(lineArray[count]);
+
+        // 終了処理　－　アラート表示
+        var myRet = confirm("この領域を追加しますか。");
+        if (myRet == true) {
+          pickingMode = false
+          EventBus.$emit("REGISTER_SECOND_STEP", pointArray)
+        } else {
+          this.resetCreateTarget()
+        }
+      }
+      else{
+        // 点を描く
+        var geometry = new THREE.Geometry();
+        var vertex = new THREE.Vector3();
+        geometry.vertices.push(vertex);
+        var material = new THREE.PointCloudMaterial({map: discTexture, transparent: true, size: 3.0});
+        _point = new THREE.PointCloud(geometry, material);
+
+        console.log(targets);
+        var k = 0;
+        if(targets[0].face == null)
+          k = 1;
+        var normal = targets[k].face.normal;
+        console.log(targets[k].point);
+        console.log(normal);
+        _point.position.set(
+          targets[k].point.x + offset * normal.x,
+          targets[k].point.y + offset * normal.y,
+          targets[k].point.z + offset * normal.z
+          );
+        _point.name = 'point' + count;
+        _pointArray[count] = _point;
+        mastaba.push(_point);
+        scene.add(_pointArray[count]);
+        pointArray[count] = targets[0].point; //正しいピッキングの位置
+        console.log(pointArray[count]);
+
+        // 2回目以降　ー　線を描く
+        if (count > 0) {
+          var lg = new THREE.Geometry();
+          lg.vertices.push(_pointArray[count - 1].position);
+          lg.vertices.push(_pointArray[count].position);
+          lineArray[count - 1] = new THREE.Line(lg, new THREE.LineBasicMaterial({
+            color : 0xff0000,
+            opacity : 0.5,
+            linewidth : 10
+          }));
+          scene.add(lineArray[count - 1]);
+        }
+
+        // カウントする
+        count++;
+      }
+    }
+  }
+  resetCreateTarget() {
+    pointArray.forEach((point, i) => {
+      scene.remove(point)
+      scene.remove(_pointArray[i])
+    })
+    lineArray.forEach(line => {
+      scene.remove(line)
+    })
+    for(let i = 0; i < mastaba.length - 4; i++){
+      mastaba.splice(5, 1);
+    }
+    count = 0;
+    targets = [];
   }
 }

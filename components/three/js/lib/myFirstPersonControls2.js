@@ -275,7 +275,6 @@ THREE.FirstPersonControls = function(object, domElement) {
 
 		if (event.button == 0){
 			state = STATE.ROTATE;
-			console.log(event.button);
 			this._mouseX = event.pageX - this.domElement.offsetLeft - this.viewHalfX;
 			this._mouseY = event.pageY - this.domElement.offsetTop - this.viewHalfY;
 		}else if(event.button == 1){

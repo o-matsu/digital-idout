@@ -12,5 +12,5 @@ module.exports = {
   plugins: [],
   // add your custom rules here
   rules: {},
-  ignorePatterns: ['components/three/js/lib/'],
+  ignorePatterns: ['components/three/js/'],
 }
