@@ -11,6 +11,7 @@
  *
  */
 import THREE from './three_r70.min.js'
+import EventBus from '~/utils/EventBus'
 
 THREE.FirstPersonControls = function(object, domElement) {
 
@@ -291,7 +292,8 @@ THREE.FirstPersonControls = function(object, domElement) {
 
 	this.onMouseUp = function(event) {
 		// console.log(dragdis);
-		if(dragdis < 10 && state == STATE.ROTATE) mouseClick(event);
+		// if(dragdis < 10 && state == STATE.ROTATE) mouseClick(event);
+		if(dragdis < 10 && state == STATE.ROTATE) EventBus.$emit("MOUSE_CLICK", event)
 
 		this.mouseX = 0;
 		this.mouseY = 0;
