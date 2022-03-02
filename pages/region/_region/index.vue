@@ -6,14 +6,16 @@
     right
     :width='360'
   >
-    <v-list-item>
-      <v-list-item-content>
-        <v-list-item-title class="text-h6">
-          Data list
-        </v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-    <v-divider />
+    <template v-slot:prepend>
+      <div class="pa-2 d-flex justify-space-between">
+        <h1>Data list</h1>
+        <v-btn icon @click="dataViewerDrawer = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </div>
+      <v-divider />
+    </template>
+
     <v-row class="pa-2">
       <v-col v-for='(meta, i) in metas' :key='i' cols='12'>
         <meta-card :data='meta.data' :id='meta.id' />
@@ -35,8 +37,11 @@
 import { mapGetters } from 'vuex'
 export default {
   name: 'RegionId',
-  asyncData({ store, params }) {
-    store.dispatch('firebase/loadMetasByRegion', { regionId: params.region, force: false })
+  async asyncData({ store, params, redirect }) {
+    await store.dispatch('firebase/loadMetasByRegion', { regionId: params.region, force: false })
+    if(!store.getters['firebase/getMetasByRegion'](params.region)) {
+      redirect({ name: 'index' })
+    }
   },
   data() {
     return {

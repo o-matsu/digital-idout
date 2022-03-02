@@ -6,14 +6,15 @@
     right
     :width='360'
   >
-    <v-list-item>
-      <v-list-item-content>
-        <v-list-item-title class="text-h6">
-          Data Detail
-        </v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-    <v-divider />
+    <template v-slot:prepend>
+      <div class="pa-2 d-flex justify-space-between">
+        <h1>Data Detail</h1>
+        <v-btn icon :to="{ name: 'region-region', params: { region: $route.params.region } }">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </div>
+      <v-divider />
+    </template>
     <div class="d-flex flex-column ma-4">
       <v-chip small>
         {{ meta.data.targetRole }}
@@ -55,11 +56,11 @@
     </div>
 
 
-    <template v-slot:append>
+    <template v-if='isAuthor' v-slot:append>
       <div class="pa-2">
-        <v-btn block :to="{ name: 'region-region', params: { region: $route.params.region } }">
-          <v-icon>mdi-arrow-left</v-icon>
-          Back
+        <v-btn block color="red" @click='deleteMeta'>
+          <v-icon>mdi-delete</v-icon>
+          DELETE
         </v-btn>
       </div>
     </template>
@@ -71,7 +72,13 @@ import { format } from 'date-fns'
 import { mapGetters } from 'vuex'
 export default {
   name: 'RegionMetaId',
-  asyncData({ store, params }) {
+  async asyncData({ store, params, redirect }) {
+    if (!store.getters['firebase/getMetaById'](params.meta)) {
+      await store.dispatch('firebase/loadMetasByRegion', { regionId: params.region, force: true })
+      if(!store.getters['firebase/getMetaById'](params.meta)) {
+        redirect({ name: 'index' })
+      }
+    }
   },
   data() {
     return {
@@ -82,12 +89,16 @@ export default {
     ...mapGetters({
       getMetaById: 'firebase/getMetaById',
       getUserName: 'firebase/getUserName',
+      userId: 'auth/getId',
     }),
     meta () {
       return this.getMetaById(this.$route.params.meta)
     },
     datetime() {
       return format(this.meta.data.createdAt.toDate(), 'yyyy-MM-dd kk:mm')
+    },
+    isAuthor() {
+      return this.meta.data.authorId === this.userId
     },
   },
   watch: {
@@ -97,6 +108,14 @@ export default {
       }
     },
   },
+  methods: {
+    async deleteMeta() {
+      if (confirm("Are you sure you want to permanently delete this data?")) {
+        await this.$store.dispatch('firebase/deleteMeta', { meta: this.meta })
+        this.$router.push({ name: 'index' })
+      }
+    },
+  }
 }
 </script>
 

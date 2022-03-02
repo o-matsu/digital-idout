@@ -7,13 +7,12 @@
     :width='width'
   >
     <template v-slot:prepend>
-      <v-list-item>
-        <v-list-item-content>
-          <v-list-item-title class="text-h6">
-            Data registration
-          </v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
+      <div class="pa-2 d-flex justify-space-between">
+        <h1>Data registration</h1>
+        <v-btn icon @click='jumpRoot'>
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </div>
       <v-divider />
     </template>
 
@@ -82,13 +81,6 @@
         </v-btn>
       </v-stepper-content>
     </v-stepper>
-    <template v-slot:append>
-      <div class="pa-2">
-        <v-btn block @click='jumpRoot'>
-          Cancel
-        </v-btn>
-      </div>
-    </template>
   </v-navigation-drawer>
 </template>
 

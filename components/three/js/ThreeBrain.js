@@ -295,14 +295,10 @@ export default class ThreeBrain {
   }
 
   mouseClick(e) {
-    console.log(0, targets)
     if(targets.length > 0) {
-      console.log(1, targets)
       if (pickingMode) {
-        console.log(2, targets)
         this.createRegion()
       } else if (targets[0].object.name !== "point0") {
-        console.log(3, targets)
         EventBus.$emit("PICK_REGIONS", targets)
       }
     }
@@ -392,7 +388,7 @@ export default class ThreeBrain {
         scene.add(lineArray[count]);
 
         // 終了処理　－　アラート表示
-        var myRet = confirm("この領域を追加しますか。");
+        var myRet = confirm("Do you want to add this region?");
         if (myRet == true) {
           pickingMode = false
           EventBus.$emit("REGISTER_SECOND_STEP", pointArray)

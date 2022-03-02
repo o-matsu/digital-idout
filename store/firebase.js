@@ -22,6 +22,9 @@ export const mutations = {
   SET_METAS: (state, metas) => {
     state.metas.push(...metas)
   },
+  RESET_METAS: (state, metas) => {
+    state.metas = metas
+  },
   SET_USER: (state, user) => {
     state.users.push(user)
   },
@@ -68,7 +71,11 @@ export const actions = {
     }
     const metas = await dispatch('fetchMetasByRegion', regionId)
     await dispatch('loadAuthors', metas)
-    commit('SET_METAS', metas)
+    if (force) {
+      commit('RESET_METAS', metas)
+    } else {
+      commit('SET_METAS', metas)
+    }
   },
   async fetchAuthor(_, userId) {
     const userDoc = await this.$fire.firestore.collection('users')
@@ -107,9 +114,10 @@ export const actions = {
       console.error(e)
     }
   },
-  async insertMeta({ rootGetter, dispatch }, { regionId, meta, files }) {
+  async insertMeta({ rootGetters, dispatch }, { regionId, meta, files }) {
     const filePaths = []
     try {
+      // upload files to storage
       await Promise.all(files.map(async (file) => {
         const storegeRef = this.$fire.storage.ref('data/' + file.name)
         await storegeRef.put(file)
@@ -117,8 +125,9 @@ export const actions = {
         filePaths.push(path)
       }))
 
+      // insert record to firestore/metas
       const metaDoc = await this.$fire.firestore.collection('metas').add({
-        authorId: rootGetter['auth/getId'],
+        authorId: rootGetters['auth/getId'],
         title: meta.title,
         targetRole: meta.target,
         comment: meta.comment,
@@ -127,6 +136,7 @@ export const actions = {
         createdAt: this.$fireModule.firestore.Timestamp.now(),
       })
 
+      // update record in firestore/regions
       const regionRef = this.$fire.firestore.collection('regions').doc(regionId)
       const regionDoc = await regionRef.get()
       const docData = regionDoc.data().hasRoles
@@ -141,7 +151,43 @@ export const actions = {
 
       await dispatch('loadMetasByRegion', { regionId, force: true })
       return metaDoc.id
-  } catch(e) {
+    } catch(e) {
+      console.error(e)
+    }
+  },
+  async deleteMeta({ dispatch }, { meta }) {
+    try {
+      // delete file in storage
+      await Promise.all(meta.data.files.map(async (file) => {
+        await this.$fire.storage.ref('data/' + file.name).delete()
+      }))
+
+      // delete record in firestore/metas
+      await this.$fire.firestore.collection('metas').doc(meta.id).delete()
+
+      // update record in firestore/regions
+      const regionId = meta.data.regionId
+      const deletedRole = meta.data.targetRole
+      const hasRole = await this.$fire.firestore.collection('metas')
+        .where('regionId', '==', regionId).where('targetRole', '==', deletedRole).get()
+      console.log("🚀 ~ file: firebase.js ~ line 171 ~ deleteMeta ~ hasRole", hasRole)
+      console.log("🚀 ~ file: firebase.js ~ line 171 ~ deleteMeta ~ hasRole.empty", hasRole.empty)
+      if(hasRole.empty) {
+        const regionRef = this.$fire.firestore.collection('regions').doc(regionId)
+        const regionDoc = await regionRef.get()
+        const docData = regionDoc.data().hasRoles
+        const data = {
+          GENERAL: deletedRole === 'GENERAL' ? false : docData.GENERAL,
+          EXPERT: deletedRole === 'EXPERT' ? false : docData.EXPERT,
+          PROJECT: deletedRole === 'PROJECT' ? false : docData.PROJECT,
+        }
+        regionRef.update({
+          hasRoles: data,
+        })
+      }
+
+      dispatch('resetStore')
+    } catch(e) {
       console.error(e)
     }
   },

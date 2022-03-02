@@ -75,8 +75,6 @@ export default {
     CanvasFrame
   },
   mounted(){
-    // イベント登録
-    EventBus.$on("PICK_REGIONS", this.pickRegions);
   },
   data() {
     return {
@@ -127,9 +125,6 @@ export default {
     },
   },
   methods: {
-    pickRegions(targets) {
-      this.$router.push({ name: 'region-region', params: { region: targets[0].object.name }})
-    },
     SignIn() {
       const provider = new this.$fireModule.auth.GoogleAuthProvider()
       this.$fire.auth.signInWithRedirect(provider)
