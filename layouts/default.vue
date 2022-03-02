@@ -19,7 +19,7 @@
         </v-tooltip>
         <v-tooltip bottom>
           <template v-slot:activator="{ on, attrs }">
-            <v-btn icon v-bind="attrs" v-on="on" :to="{ name: 'register' }">
+            <v-btn icon :disabled='!isAuth' v-bind="attrs" v-on="on" :to="{ name: 'register' }">
               <v-icon>mdi-map-marker-plus</v-icon>
             </v-btn>
           </template>
@@ -35,9 +35,26 @@
         </v-tooltip>
       </div>
       <v-spacer />
-      <v-btn icon @click.stop="rightDrawer = !rightDrawer">
-        <v-icon>mdi-menu</v-icon>
+      <v-btn v-if='!isAuth' text @click="SignIn">
+        Sign in
       </v-btn>
+      <v-menu v-else offset-y>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            text
+            v-bind="attrs"
+            v-on="on"
+          >
+            <v-chip label outlined x-small>{{ user.role }}</v-chip>
+            <span>{{ user.name }}</span>
+          </v-btn>
+        </template>
+        <v-list>
+          <v-list-item @click='signOut'>
+            <v-list-item-title>Sign out</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </v-app-bar>
 
     <v-main>
@@ -49,6 +66,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import CanvasFrame from '~/components/three/CanvasFrame'
 import EventBus from '~/utils/EventBus'
 export default {
@@ -84,6 +102,12 @@ export default {
       showRegions: false,
     }
   },
+  computed: {
+    ...mapGetters({
+      isAuth: 'auth/isAuth',
+      user: 'auth/getUser'
+    }),
+  },
   watch: {
     // routeが変わるときにシーンを変えるなどなにか処理する
     '$route.name': {
@@ -105,7 +129,19 @@ export default {
   methods: {
     pickRegions(targets) {
       this.$router.push({ name: 'region-region', params: { region: targets[0].object.name }})
-    }
+    },
+    SignIn() {
+      const provider = new this.$fireModule.auth.GoogleAuthProvider()
+      this.$fire.auth.signInWithRedirect(provider)
+    },
+    async signOut() {
+      try {
+        await this.$fire.auth.signOut()
+        this.$store.dispatch('firebase/resetStore')
+      } catch (error) {
+        console.log('failed logout')
+      }
+    },
   },
 }
 </script>

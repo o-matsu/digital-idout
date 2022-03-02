@@ -18,16 +18,12 @@
       <v-chip small>
         {{ meta.data.targetRole }}
       </v-chip>
-      <div
-        class="text-h5 pt-0 d-inline-block text-truncate"
-        v-text="meta.data.title"
-        style="max-width: 200px;"
-      ></div>
+      <div class="text-h5 pt-0 d-inline-block">{{ meta.data.title }}</div>
       <div class="grey--text text-lighten-5">
-        <div>{{ meta.data.authorId }}</div>
+        <div>{{ getUserName(meta.data.authorId) }}</div>
         <div>{{ datetime }}</div>
       </div>
-      <v-card class="pa-4" color='grey'>
+      <v-card class="pa-4" color='grey darken-3'>
         {{ meta.data.comment }}
       </v-card>
       <v-divider class="my-2"/>
@@ -84,7 +80,8 @@ export default {
   },
   computed: {
     ...mapGetters({
-      getMetaById: 'firebase/getMetaById'
+      getMetaById: 'firebase/getMetaById',
+      getUserName: 'firebase/getUserName',
     }),
     meta () {
       return this.getMetaById(this.$route.params.meta)

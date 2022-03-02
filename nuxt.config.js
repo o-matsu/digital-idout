@@ -57,9 +57,13 @@ export default {
           measurementId: "G-7TLVQPRJFF"
         },
         services: {
-          auth: true, // Just as example. Can be any other service.
           firestore: true,
           storage: true,
+          auth: {
+            initialize: {
+              onAuthStateChangedAction: 'auth/onAuthStateChanged',
+            },
+          },
         }
       }
     ],

@@ -1,54 +1,89 @@
 const initialState = () => ({
   metas: [],
   regions: [],
-  focusedRegion: null,
+  users: [],
 })
+const roleLevel = ['GENERAL', 'EXPERT', 'PROJECT']
 
 export const state = () => Object.assign({}, initialState())
 export const getters = {
   regions: (state) => state.regions,
-  metas: (state) => state.metas,
-  getMetaById: (state) => id => state.metas.find(meta => meta.id === id)
+  getMetasByRegion: (state) => regionId => state.metas.filter(meta => meta.data.regionId === regionId),
+  getMetaById: (state) => id => state.metas.find(meta => meta.id === id),
+  getUserName: (state) => id => state.users.find(user => user.userId === id).displayName,
 }
 export const mutations = {
+  RESET_STORE: (state) => {
+    Object.assign(state, initialState())
+  },
   SET_REGIONS: (state, regions) => {
     state.regions = regions
   },
   SET_METAS: (state, metas) => {
-    state.metas = metas
+    state.metas.push(...metas)
   },
-  SET_FOCUS: (state, regionId) => {
-    state.focusedRegion = state.regions.find(region => region.id === regionId)
-  }
+  SET_USER: (state, user) => {
+    state.users.push(user)
+  },
 }
 export const actions = {
-  async fetchRoleRegions() {
-    // TODO: ログイン機能実装後、ロールの検索条件を加える
-    const regions = []
-    const regionDocs = await this.$fire.firestore.collection('regions').get()
+  resetStore({ commit }) {
+    commit('RESET_STORE')
+  },
+  async getRoleRegions(_, { regions, role }) {
+    const regionDocs = await this.$fire.firestore.collection('regions').where('hasRoles.' + role, '==', true).get()
     regionDocs.forEach(doc => {
-      regions.push({ id: doc.id, data: doc.data() })
+      if(!regions.map(region => region.id).includes(doc.id)) {
+        regions.push({ id: doc.id, data: doc.data() })
+      }
     })
+    return regions
+  },
+  async fetchRoleRegions({ rootGetters, dispatch }) {
+    const role = rootGetters['auth/isAuth'] ? rootGetters['auth/getUser'].role : 'GENERAL'
+    let regions = []
+    for (let i = 0; i < roleLevel.indexOf(role) + 1; i++) {
+      regions = await dispatch('getRoleRegions', { regions, role: roleLevel[i] })
+    }
     return regions
   },
   async loadRoleRegions({ commit, dispatch }) {
     const regions = await dispatch('fetchRoleRegions')
     commit('SET_REGIONS', regions)
   },
-  async fetchMetasByRegion(_, regionId) {
+  async fetchMetasByRegion({ rootGetters, dispatch }, regionId) {
+    const role = rootGetters['auth/isAuth'] ? rootGetters['auth/getUser'].role : 'GENERAL'
+    const target = roleLevel.slice(0, roleLevel.indexOf(role) + 1)
     const metas = []
     const metaDocs = await this.$fire.firestore.collection('metas')
-      .where('regionId', '==', regionId).get()
+      .where('regionId', '==', regionId).where('targetRole', 'in', target).get()
     metaDocs.forEach(doc => {
       metas.push({ id: doc.id, data: doc.data() })
     })
     return metas
   },
-  async loadMetasByRegion({ commit, dispatch }, regionId) {
+  async loadMetasByRegion({ state, commit, dispatch }, { regionId, force }) {
+    if (state.metas.some(meta => meta.data.regionId === regionId) && !force) {
+      return
+    }
     const metas = await dispatch('fetchMetasByRegion', regionId)
+    await dispatch('loadAuthors', metas)
     commit('SET_METAS', metas)
-    commit('SET_FOCUS', regionId)
   },
+  async fetchAuthor(_, userId) {
+    const userDoc = await this.$fire.firestore.collection('users')
+      .doc(userId).get()
+    return userDoc.data()
+  },
+  async loadAuthors({ state, dispatch, commit }, metas) {
+    const authorIds =[...new Set(metas.map(meta => meta.data.authorId))]
+    await Promise.all(authorIds.map(async (authorId) => {
+      if (!state.users.map(user => user.userId).includes(authorId)) {
+        const user = await dispatch('fetchAuthor', authorId)
+        commit('SET_USER', user)
+      }
+    }))
+},
   async register({ dispatch }, { points, meta, files }) {
     const regionId = await dispatch('insertRegion', { points })
     const metaId = await dispatch('insertMeta', { regionId, meta, files })
@@ -65,7 +100,6 @@ export const actions = {
       },
       points,
     }
-    console.log("🚀 ~ file: firebase.js ~ line 65 ~ insertRegion ~ data", data)
     try {
       const regionRef = await this.$fire.firestore.collection('regions').add(data)
       return regionRef.id
@@ -73,7 +107,7 @@ export const actions = {
       console.error(e)
     }
   },
-  async insertMeta(_, { regionId, meta, files }) {
+  async insertMeta({ rootGetter, dispatch }, { regionId, meta, files }) {
     const filePaths = []
     try {
       await Promise.all(files.map(async (file) => {
@@ -84,8 +118,7 @@ export const actions = {
       }))
 
       const metaDoc = await this.$fire.firestore.collection('metas').add({
-        // TODO: add after deploy authentication
-        authorId: null,
+        authorId: rootGetter['auth/getId'],
         title: meta.title,
         targetRole: meta.target,
         comment: meta.comment,
@@ -105,6 +138,8 @@ export const actions = {
       regionRef.update({
         hasRoles: data,
       })
+
+      await dispatch('loadMetasByRegion', { regionId, force: true })
       return metaDoc.id
   } catch(e) {
       console.error(e)

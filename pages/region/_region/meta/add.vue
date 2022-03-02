@@ -29,7 +29,7 @@
       </v-stepper-step>
 
       <v-stepper-content step="1">
-        <v-form v-model="valid" lazy-validation>
+        <v-form ref="form" v-model="valid" lazy-validation>
           <v-text-field label='TITLE' v-model='meta.title' :rules="requiredRule" />
           <v-select
             :items="securityOptions"
@@ -40,7 +40,7 @@
           <v-textarea label='DESCRIPTION' rows='3' v-model='meta.comment' :rules="requiredRule" />
           <v-btn
             color="primary"
-            @click="step = 2"
+            @click="goSecond"
             :disabled="!valid"
           >
             Continue
@@ -84,6 +84,7 @@
 <script>
 export default {
   name: 'RegionMetaAdd',
+  middleware: ['authenticated'],
   data () {
     return {
       drawer: true,
@@ -93,7 +94,7 @@ export default {
         { text: 'EXPERT', value: 'EXPERT' },
         { text: 'PROJECT', value: 'PROJECT' },
       ],
-      valid: true,
+      valid: false,
       meta: {
         title: '',
         target: null,
@@ -109,6 +110,11 @@ export default {
     jumpBack() {
       this.drawer = false
       this.$router.push({ name: 'region-region', params: { region: this.$route.params.region }})
+    },
+    goSecond() {
+      if (this.$refs.form.validate()) {
+        this.step = 2
+      }
     },
     async submit() {
       const metaId = await this.$store.dispatch('firebase/insertMeta', {

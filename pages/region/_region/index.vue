@@ -22,7 +22,7 @@
 
     <template v-slot:append>
       <div class="pa-2">
-        <v-btn block :to="{ name: 'region-region-meta-add', params: { region: $route.params.region } }">
+        <v-btn block :disabled='!isAuth' :to="{ name: 'region-region-meta-add', params: { region: $route.params.region } }">
           <v-icon>mdi-plus</v-icon>
           Add data
         </v-btn>
@@ -36,7 +36,7 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'RegionId',
   asyncData({ store, params }) {
-    store.dispatch('firebase/loadMetasByRegion', params.region)
+    store.dispatch('firebase/loadMetasByRegion', { regionId: params.region, force: false })
   },
   data() {
     return {
@@ -45,8 +45,12 @@ export default {
   },
   computed: {
     ...mapGetters({
-      metas: 'firebase/metas'
-    })
+      getMetasByRegion: 'firebase/getMetasByRegion',
+      isAuth: 'auth/isAuth',
+    }),
+    metas () {
+      return this.getMetasByRegion(this.$route.params.region)
+    },
   },
   watch: {
     dataViewerDrawer(val) {

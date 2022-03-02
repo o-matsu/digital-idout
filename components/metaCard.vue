@@ -19,7 +19,12 @@
           style="max-width: 200px;"
         ></v-card-title>
         <v-card-subtitle class="grey--text text-lighten-5">
-          <div>{{ data.authorId }}</div>
+          <div
+            class="text-truncate"
+            style="max-width: 200px;"
+          >
+            {{ getUserName(data.authorId) }}
+          </div>
           <div>{{ datetime }}</div>
         </v-card-subtitle>
       </div>
@@ -37,6 +42,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import { format } from 'date-fns'
 
 export default {
@@ -45,6 +51,9 @@ export default {
     data: { type: Object, required: true },
   },
   computed: {
+    ...mapGetters({
+      getUserName: 'firebase/getUserName',
+    }),
     datetime() {
       return format(this.data.createdAt.toDate(), 'yyyy-MM-dd kk:mm')
     },

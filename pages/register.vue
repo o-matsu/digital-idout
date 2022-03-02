@@ -40,7 +40,7 @@
       </v-stepper-step>
 
       <v-stepper-content step="2">
-        <v-form v-model="valid" lazy-validation>
+        <v-form ref="form" v-model="valid" lazy-validation>
           <v-text-field label='TITLE' v-model='meta.title' :rules="requiredRule" />
           <v-select
             :items="securityOptions"
@@ -51,7 +51,7 @@
           <v-textarea label='DESCRIPTION' rows='3' v-model='meta.comment' :rules="requiredRule" />
           <v-btn
             color="primary"
-            @click="step = 3"
+            @click="goThird"
             :disabled="!valid"
           >
             Continue
@@ -97,6 +97,7 @@ import EventBus from '~/utils/EventBus'
 
 export default {
   name: 'RegisterRegion',
+  middleware: ['authenticated'],
   mounted(){
     // イベント登録
     EventBus.$on("REGISTER_SECOND_STEP", this.goSecond)
@@ -112,7 +113,7 @@ export default {
         { text: 'PROJECT', value: 'PROJECT' },
       ],
       points: [],
-      valid: true,
+      valid: false,
       meta: {
         title: '',
         target: null,
@@ -139,6 +140,11 @@ export default {
     goSecond(pointArray) {
       this.step = 2
       this.points = pointArray
+    },
+    goThird() {
+      if (this.$refs.form.validate()) {
+        this.step = 3
+      }
     },
     async submit() {
       const { regionId, metaId } = await this.$store.dispatch('firebase/register', {
