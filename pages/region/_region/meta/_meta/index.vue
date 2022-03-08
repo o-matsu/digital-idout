@@ -28,7 +28,7 @@
         {{ meta.data.comment }}
       </v-card>
       <v-divider class="my-2"/>
-      <v-card v-for='(file, i) in meta.data.files' :key='i' :href='file.src' target='_blank' hover>
+      <v-card v-for='(file, i) in meta.data.files' :key='i' :href='file.src' target='_blank' hover class="mb-2">
         <div class="d-flex flex-no-wrap justify-space-between">
           <div>
             <div>
