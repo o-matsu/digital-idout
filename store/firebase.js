@@ -170,8 +170,6 @@ export const actions = {
       const deletedRole = meta.data.targetRole
       const hasRole = await this.$fire.firestore.collection('metas')
         .where('regionId', '==', regionId).where('targetRole', '==', deletedRole).get()
-      console.log("🚀 ~ file: firebase.js ~ line 171 ~ deleteMeta ~ hasRole", hasRole)
-      console.log("🚀 ~ file: firebase.js ~ line 171 ~ deleteMeta ~ hasRole.empty", hasRole.empty)
       if(hasRole.empty) {
         const regionRef = this.$fire.firestore.collection('regions').doc(regionId)
         const regionDoc = await regionRef.get()
