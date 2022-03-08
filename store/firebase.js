@@ -90,7 +90,7 @@ export const actions = {
         commit('SET_USER', user)
       }
     }))
-},
+  },
   async register({ dispatch }, { points, meta, files }) {
     const regionId = await dispatch('insertRegion', { points })
     const metaId = await dispatch('insertMeta', { regionId, meta, files })
