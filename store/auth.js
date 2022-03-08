@@ -54,7 +54,7 @@ export const actions = {
             email: authUser.email,
             displayName: authUser.displayName,
             createdAt: this.$fireModule.firestore.FieldValue.serverTimestamp(),
-            role: 'EXPERT',
+            role: 'GENERAL',
           }
           await userDoc.ref.set(storeUser)
         } else {
