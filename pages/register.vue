@@ -1,84 +1,68 @@
 <template>
-  <v-navigation-drawer
-    v-model="drawer"
-    absolute
-    right
-    permanent
-    :width='width'
-  >
-    <template v-slot:prepend>
+  <v-navigation-drawer v-model="drawer" absolute right permanent :width="width">
+    <template #prepend>
       <div class="pa-2 d-flex justify-space-between">
         <h1>Data registration</h1>
-        <v-btn icon @click='jumpRoot'>
+        <v-btn icon @click="jumpRoot">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
       <v-divider />
     </template>
 
-    <v-stepper
-      v-model="step"
-      vertical
-    >
-      <v-stepper-step
-        :complete="step > 1"
-        step="1"
-      >
+    <v-stepper v-model="step" vertical>
+      <v-stepper-step :complete="step > 1" step="1">
         Create new region
       </v-stepper-step>
 
       <v-stepper-content step="1">
-        <small class="grey--text">Point vertices of the region counterclockwise.</small>
+        <small class="grey--text"
+          >Point vertices of the region counterclockwise.</small
+        >
       </v-stepper-content>
 
-      <v-stepper-step
-        :complete="step > 2"
-        step="2"
-      >
+      <v-stepper-step :complete="step > 2" step="2">
         Enter information
       </v-stepper-step>
 
       <v-stepper-content step="2">
         <v-form ref="form" v-model="valid" lazy-validation>
-          <v-text-field label='TITLE' v-model='meta.title' :rules="requiredRule" />
+          <v-text-field
+            v-model="meta.title"
+            label="TITLE"
+            :rules="requiredRule"
+          />
           <v-select
+            v-model="meta.target"
             :items="securityOptions"
             label="SECURITY"
-            v-model='meta.target'
             :rules="requiredRule"
-          ></v-select>
-          <v-textarea label='DESCRIPTION' rows='3' v-model='meta.comment' :rules="requiredRule" />
-          <v-btn
-            color="primary"
-            @click="goThird"
-            :disabled="!valid"
-          >
+          />
+          <v-textarea
+            v-model="meta.comment"
+            label="DESCRIPTION"
+            rows="3"
+            :rules="requiredRule"
+          />
+          <v-btn color="primary" :disabled="!valid" @click="goThird">
             Continue
           </v-btn>
         </v-form>
       </v-stepper-content>
 
-      <v-stepper-step
-        :complete="step > 3"
-        step="3"
-      >
+      <v-stepper-step :complete="step > 3" step="3">
         Upload data files
       </v-stepper-step>
 
       <v-stepper-content step="3">
         <v-file-input
+          v-model="files"
           chips
           multiple
           label="select files"
           accept="image/*, application/pdf"
-          v-model='files'
-        ></v-file-input>
-        <v-btn
-          color="primary"
-          @click="submit"
-        >
-          Submit
-        </v-btn>
+        />
+        <v-btn color="primary" @click="submit"> Submit </v-btn>
       </v-stepper-content>
     </v-stepper>
   </v-navigation-drawer>
@@ -90,11 +74,7 @@ import EventBus from '~/utils/EventBus'
 export default {
   name: 'RegisterRegion',
   middleware: ['authenticated'],
-  mounted(){
-    // イベント登録
-    EventBus.$on("REGISTER_SECOND_STEP", this.goSecond)
-  },
-  data () {
+  data() {
     return {
       drawer: true,
       width: 256,
@@ -112,9 +92,7 @@ export default {
         comment: '',
       },
       files: [],
-      requiredRule: [
-        v => !!v || 'required',
-      ],
+      requiredRule: [(v) => !!v || 'required'],
     }
   },
   watch: {
@@ -122,7 +100,11 @@ export default {
       if (val > 1) {
         this.width = 512
       }
-    }
+    },
+  },
+  mounted() {
+    // イベント登録
+    EventBus.$on('REGISTER_SECOND_STEP', this.goSecond)
   },
   methods: {
     jumpRoot() {
@@ -139,23 +121,24 @@ export default {
       }
     },
     async submit() {
-      const { regionId, metaId } = await this.$store.dispatch('firebase/register', {
-        points: this.points,
-        meta: this.meta,
-        files: this.files,
-      })
+      const { regionId, metaId } = await this.$store.dispatch(
+        'firebase/register',
+        {
+          points: this.points,
+          meta: this.meta,
+          files: this.files,
+        },
+      )
       this.$router.push({
         name: 'region-region-meta-meta',
         params: {
           region: regionId,
           meta: metaId,
-        }
+        },
       })
-    }
+    },
   },
 }
 </script>
 
-<style>
-
-</style>
+<style></style>

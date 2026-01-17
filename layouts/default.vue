@@ -5,28 +5,34 @@
       <v-spacer />
       <div>
         <v-tooltip bottom>
-          <template v-if="!showRegions" v-slot:activator="{ on, attrs }">
-            <v-btn icon @click='showRegions = true' v-bind="attrs" v-on="on">
+          <template v-if="!showRegions" #activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" @click="showRegions = true" v-on="on">
               <v-icon>mdi-eye</v-icon>
             </v-btn>
           </template>
-          <template v-else v-slot:activator="{ on, attrs }">
-            <v-btn icon @click='showRegions = false' v-bind="attrs" v-on="on">
+          <template v-else #activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" @click="showRegions = false" v-on="on">
               <v-icon>mdi-eye-off</v-icon>
             </v-btn>
           </template>
           <span>Switch view mode</span>
         </v-tooltip>
         <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn icon :disabled='!isAuth' v-bind="attrs" v-on="on" :to="{ name: 'register' }">
+          <template #activator="{ on, attrs }">
+            <v-btn
+              icon
+              :disabled="!isAuth"
+              v-bind="attrs"
+              :to="{ name: 'register' }"
+              v-on="on"
+            >
               <v-icon>mdi-map-marker-plus</v-icon>
             </v-btn>
           </template>
           <span>Data registration</span>
         </v-tooltip>
         <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <v-btn icon disabled v-bind="attrs" v-on="on">
               <v-icon>mdi-layers-triple</v-icon>
             </v-btn>
@@ -35,22 +41,16 @@
         </v-tooltip>
       </div>
       <v-spacer />
-      <v-btn v-if='!isAuth' text @click="SignIn">
-        Sign in
-      </v-btn>
+      <v-btn v-if="!isAuth" text @click="SignIn"> Sign in </v-btn>
       <v-menu v-else offset-y>
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            text
-            v-bind="attrs"
-            v-on="on"
-          >
+        <template #activator="{ on, attrs }">
+          <v-btn text v-bind="attrs" v-on="on">
             <v-chip label outlined x-small>{{ user.role }}</v-chip>
             <span>{{ user.name }}</span>
           </v-btn>
         </template>
         <v-list>
-          <v-list-item @click='signOut'>
+          <v-list-item @click="signOut">
             <v-list-item-title>Sign out</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -72,9 +72,7 @@ import EventBus from '~/utils/EventBus'
 export default {
   name: 'DefaultLayout',
   components: {
-    CanvasFrame
-  },
-  mounted(){
+    CanvasFrame,
   },
   data() {
     return {
@@ -100,10 +98,11 @@ export default {
       showRegions: false,
     }
   },
+  mounted() {},
   computed: {
     ...mapGetters({
       isAuth: 'auth/isAuth',
-      user: 'auth/getUser'
+      user: 'auth/getUser',
     }),
   },
   watch: {
@@ -111,17 +110,17 @@ export default {
     '$route.name': {
       handler(newVal, oldVal) {
         if (newVal === 'register') {
-          EventBus.$emit("TOGGLE_PICKING_MODE", true)
+          EventBus.$emit('TOGGLE_PICKING_MODE', true)
         }
         if (oldVal === 'register') {
-          EventBus.$emit("TOGGLE_PICKING_MODE", false)
+          EventBus.$emit('TOGGLE_PICKING_MODE', false)
         }
       },
       deep: true,
       immediate: true,
     },
     showRegions(flag) {
-      EventBus.$emit("TOGGLE_REGIONS_VIEW", flag)
+      EventBus.$emit('TOGGLE_REGIONS_VIEW', flag)
     },
   },
   methods: {
@@ -133,7 +132,7 @@ export default {
       try {
         await this.$fire.auth.signOut()
         this.$store.dispatch('firebase/resetStore')
-      } catch (error) {
+      } catch {
         console.log('failed logout')
       }
     },

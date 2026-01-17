@@ -11,16 +11,18 @@ let controls
 let targets = []
 let regionsViewFlag = false
 let pickingMode = false // false: 通常モード, true: ROI作成
-let count = 0, point0_state = -1
+let count = 0,
+  point0_state = -1
 let _point
-let _pointArray = [], pointArray = [], lineArray = []
+let _pointArray = [],
+  pointArray = [],
+  lineArray = []
 
 const mastaba = []
 const polyArray = []
 const clock = new THREE.Clock()
-const discTexture = THREE.ImageUtils.loadTexture( '/img/disc.png' );
-const offset = 0.5;
-
+const discTexture = THREE.ImageUtils.loadTexture('/img/disc.png')
+const offset = 0.5
 
 // three.jsの処理を書いていく
 export default class ThreeBrain {
@@ -28,10 +30,10 @@ export default class ThreeBrain {
     this.props = props
     this.init()
     //
-    EventBus.$on("DRAW_REGIONS", this.drawRegions.bind(this));
-    EventBus.$on("TOGGLE_REGIONS_VIEW", this.toggleRegionsView.bind(this));
-    EventBus.$on("MOUSE_CLICK", this.mouseClick.bind(this));
-    EventBus.$on("TOGGLE_PICKING_MODE", this.togglePickingMode.bind(this));
+    EventBus.$on('DRAW_REGIONS', this.drawRegions.bind(this))
+    EventBus.$on('TOGGLE_REGIONS_VIEW', this.toggleRegionsView.bind(this))
+    EventBus.$on('MOUSE_CLICK', this.mouseClick.bind(this))
+    EventBus.$on('TOGGLE_PICKING_MODE', this.togglePickingMode.bind(this))
   }
 
   init() {
@@ -62,7 +64,11 @@ export default class ThreeBrain {
     // $('#menu-right').children().height('100%');
 
     // マウスイベント
-    renderer.domElement.addEventListener('mousemove', this.mouseMove.bind(this), false);
+    renderer.domElement.addEventListener(
+      'mousemove',
+      this.mouseMove.bind(this),
+      false,
+    )
   }
 
   initCamera($canvas) {
@@ -179,47 +185,53 @@ export default class ThreeBrain {
   drawRegions(regions) {
     const edgeArray = []
     const offset = 0.5
-    regions.forEach(region => {
+    regions.forEach((region) => {
       const edges = new THREE.Geometry()
-      const vertices = region.data.points.map(point => {
+      const vertices = region.data.points.map((point) => {
         return new THREE.Vector3(point.x, point.y, point.z)
       })
-      vertices.forEach(vertex => {
+      vertices.forEach((vertex) => {
         edges.vertices.push(vertex)
       })
       edges.vertices.push(vertices[0])
-      const line = new THREE.Line(edges, new THREE.LineBasicMaterial({
-        color : 0xff0000,
-        opacity : 0.5,
-        linewidth : 10,
-        visible : false
-      }))
+      const line = new THREE.Line(
+        edges,
+        new THREE.LineBasicMaterial({
+          color: 0xff0000,
+          opacity: 0.5,
+          linewidth: 10,
+          visible: false,
+        }),
+      )
       line.name = region.id
       edgeArray.push(line)
       scene.add(line)
 
       const targetRegion = new THREE.Geometry()
       targetRegion.vertices = edges.vertices
-      for(let j = 0; j < targetRegion.vertices.length - 3; j++){
+      for (let j = 0; j < targetRegion.vertices.length - 3; j++) {
         targetRegion.faces.push(new THREE.Face3(0, j + 1, j + 2))
       }
       targetRegion.computeFaceNormals()
-      const mesh = new THREE.Mesh(targetRegion, new THREE.MeshBasicMaterial({
-        color : 0xffddaa,
-        transparent : true,
-        opacity : 0.2,
-        visible : false
-      }))
+      const mesh = new THREE.Mesh(
+        targetRegion,
+        new THREE.MeshBasicMaterial({
+          color: 0xffddaa,
+          transparent: true,
+          opacity: 0.2,
+          visible: false,
+        }),
+      )
       polyArray.push(mesh)
 
       // 法線方向へoffsetだけずらす // // //
       line.position.set(
         line.position.x + offset * mesh.geometry.faces[0].normal.x,
         line.position.y + offset * mesh.geometry.faces[0].normal.y,
-        line.position.z + offset * mesh.geometry.faces[0].normal.z
-        )
+        line.position.z + offset * mesh.geometry.faces[0].normal.z,
+      )
       mesh.name = region.id
-      line.add(mesh);
+      line.add(mesh)
     })
     // if (mmode == 1) {
     //   console.log(polyArray);
@@ -247,71 +259,81 @@ export default class ThreeBrain {
     // const targets = null
     const mouse = new THREE.Vector2()
 
-    e.preventDefault();
-    mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1
-    mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1
+    e.preventDefault()
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1
     const vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera)
-    raycaster.set( camera.position, vector.sub( camera.position ).normalize())
+    raycaster.set(camera.position, vector.sub(camera.position).normalize())
 
     // 領域追加モード：ピッキング対象をモデルに
     // その他のモード：ピッキング対象を領域に
-    const intersects = raycaster.intersectObjects(pickingMode ? mastaba : polyArray, true)
+    const intersects = raycaster.intersectObjects(
+      pickingMode ? mastaba : polyArray,
+      true,
+    )
 
     // if ($('#button_createtarget').hasClass('active')) {
     if (pickingMode) {
       if (intersects.length) {
-        targets = intersects;
-        if(targets[0].object.name == "point0" && count > 2 && point0_state < 0){
-          point0_state *= -1;
-          targets[0].object.material.size = 5.0;
-
-        }else if(targets[0].object.name != "point0" && point0_state > 0){
-          point0_state *= -1;
-          _pointArray[0].material.size = 3.0;
+        targets = intersects
+        if (
+          targets[0].object.name == 'point0' &&
+          count > 2 &&
+          point0_state < 0
+        ) {
+          point0_state *= -1
+          targets[0].object.material.size = 5.0
+        } else if (targets[0].object.name != 'point0' && point0_state > 0) {
+          point0_state *= -1
+          _pointArray[0].material.size = 3.0
         }
       } else if (!intersects.length) {
         targets = []
       }
-    // }else if ($('#form_back').css('display') == 'none' && $('#infobox').css('display') == 'none' && infoload == 1) {
+      // }else if ($('#form_back').css('display') == 'none' && $('#infobox').css('display') == 'none' && infoload == 1) {
     } else {
       if (intersects.length > 0) {
         if (!targets.length) {
           targets = intersects
           console.log(targets[0])
           this.showTargets(targets)
-        } else if ((intersects.length !== targets.length || intersects[0].object.name !== targets[0].object.name) && targets[0].object.name !== "point0") {
+        } else if (
+          (intersects.length !== targets.length ||
+            intersects[0].object.name !== targets[0].object.name) &&
+          targets[0].object.name !== 'point0'
+        ) {
           this.hideTargets(targets)
           targets = intersects
           this.showTargets(targets)
         }
       } else if (targets.length) {
-        if (targets[0].object.name !== "point0") {
+        if (targets[0].object.name !== 'point0') {
           this.hideTargets(targets)
           targets = []
         }
       }
     }
-    renderer.render(scene, camera);
+    renderer.render(scene, camera)
   }
 
   mouseClick(e) {
-    if(targets.length > 0) {
+    if (targets.length > 0) {
       if (pickingMode) {
         this.createRegion()
-      } else if (targets[0].object.name !== "point0") {
-        EventBus.$emit("PICK_REGIONS", targets)
+      } else if (targets[0].object.name !== 'point0') {
+        EventBus.$emit('PICK_REGIONS', targets)
       }
     }
   }
 
   showTargets(targets) {
     if (!regionsViewFlag) {
-      targets.forEach(target => {
+      targets.forEach((target) => {
         target.object.material.visible = true
         target.object.parent.material.visible = true
       })
-    }else{
-      targets.forEach(target => {
+    } else {
+      targets.forEach((target) => {
         target.object.parent.material.color.setHex(0x0000ff)
       })
     }
@@ -319,46 +341,45 @@ export default class ThreeBrain {
 
   hideTargets(targets) {
     if (!regionsViewFlag) {
-      targets.forEach(target => {
+      targets.forEach((target) => {
         target.object.material.visible = false
         target.object.parent.material.visible = false
       })
     } else {
-      targets.forEach(target => {
-        target.object.parent.material.color.setHex(0xff0000);
+      targets.forEach((target) => {
+        target.object.parent.material.color.setHex(0xff0000)
       })
     }
   }
 
   toggleRegionsView(flag) {
     regionsViewFlag = flag
-		if (regionsViewFlag) {
-			if (targets.length){
-				this.showTargets(targets)
-				// if($('#form_back').css('display') != 'none'){
-				// 	targetTopColor();
-				// }
-			}
-      polyArray.forEach(poly => {
-				poly.material.visible = true
-				poly.parent.material.visible = true
+    if (regionsViewFlag) {
+      if (targets.length) {
+        this.showTargets(targets)
+        // if($('#form_back').css('display') != 'none'){
+        // 	targetTopColor();
+        // }
+      }
+      polyArray.forEach((poly) => {
+        poly.material.visible = true
+        poly.parent.material.visible = true
       })
-		}
-		else {
-      polyArray.forEach(poly => {
-				poly.material.visible = false
-				poly.parent.material.visible = false
+    } else {
+      polyArray.forEach((poly) => {
+        poly.material.visible = false
+        poly.parent.material.visible = false
       })
-			if (targets.length) {
-        targets.forEach(target => {
+      if (targets.length) {
+        targets.forEach((target) => {
           target.object.parent.material.color.setHex(0xff0000)
         })
-				this.showTargets(targets)
-				// if($('#form_back').css('display') != 'none'){
-				// 	targetTopColor();
-				// }
-			}
-		}
+        this.showTargets(targets)
+        // if($('#form_back').css('display') != 'none'){
+        // 	targetTopColor();
+        // }
+      }
+    }
   }
   togglePickingMode(flag) {
     pickingMode = flag
@@ -369,75 +390,83 @@ export default class ThreeBrain {
     console.log(targets)
     if (targets.length) {
       // 最初の点が選ばれた時　－　初期化
-      if(count == 0){
-        _pointArray = new Array();
-        pointArray = new Array();
-        lineArray = new Array();
+      if (count == 0) {
+        _pointArray = new Array()
+        pointArray = new Array()
+        lineArray = new Array()
       }
       // 再び最初の点が選ばれた時　－　終了
-      if(targets[0].object.name == "point0" && count > 2 && point0_state > 0){
+      if (targets[0].object.name == 'point0' && count > 2 && point0_state > 0) {
         // 線を描く
-        var lg = new THREE.Geometry();
-        lg.vertices.push(_pointArray[count - 1].position);
-        lg.vertices.push(_pointArray[0].position);
-        lineArray[count] = new THREE.Line(lg, new THREE.LineBasicMaterial({
-          color : 0xff0000,
-          opacity : 0.5,
-          linewidth : 10
-        }));
-        scene.add(lineArray[count]);
+        var lg = new THREE.Geometry()
+        lg.vertices.push(_pointArray[count - 1].position)
+        lg.vertices.push(_pointArray[0].position)
+        lineArray[count] = new THREE.Line(
+          lg,
+          new THREE.LineBasicMaterial({
+            color: 0xff0000,
+            opacity: 0.5,
+            linewidth: 10,
+          }),
+        )
+        scene.add(lineArray[count])
 
         // 終了処理　－　アラート表示
-        var myRet = confirm("Do you want to add this region?");
+        var myRet = confirm('Do you want to add this region?')
         if (myRet == true) {
           pickingMode = false
-          EventBus.$emit("REGISTER_SECOND_STEP", pointArray)
+          EventBus.$emit('REGISTER_SECOND_STEP', pointArray)
         } else {
           this.resetCreateTarget()
         }
-      }
-      else{
+      } else {
         // 点を描く
-        var geometry = new THREE.Geometry();
-        var vertex = new THREE.Vector3();
-        geometry.vertices.push(vertex);
-        var material = new THREE.PointCloudMaterial({map: discTexture, transparent: true, size: 3.0});
-        _point = new THREE.PointCloud(geometry, material);
+        var geometry = new THREE.Geometry()
+        var vertex = new THREE.Vector3()
+        geometry.vertices.push(vertex)
+        var material = new THREE.PointCloudMaterial({
+          map: discTexture,
+          transparent: true,
+          size: 3.0,
+        })
+        _point = new THREE.PointCloud(geometry, material)
 
-        console.log(targets);
-        var k = 0;
-        if(targets[0].face == null)
-          k = 1;
-        var normal = targets[k].face.normal;
-        console.log(targets[k].point);
-        console.log(normal);
+        console.log(targets)
+        var k = 0
+        if (targets[0].face == null) k = 1
+        var normal = targets[k].face.normal
+        console.log(targets[k].point)
+        console.log(normal)
         _point.position.set(
           targets[k].point.x + offset * normal.x,
           targets[k].point.y + offset * normal.y,
-          targets[k].point.z + offset * normal.z
-          );
-        _point.name = 'point' + count;
-        _pointArray[count] = _point;
-        mastaba.push(_point);
-        scene.add(_pointArray[count]);
-        pointArray[count] = targets[0].point; //正しいピッキングの位置
-        console.log(pointArray[count]);
+          targets[k].point.z + offset * normal.z,
+        )
+        _point.name = 'point' + count
+        _pointArray[count] = _point
+        mastaba.push(_point)
+        scene.add(_pointArray[count])
+        pointArray[count] = targets[0].point //正しいピッキングの位置
+        console.log(pointArray[count])
 
         // 2回目以降　ー　線を描く
         if (count > 0) {
-          var lg = new THREE.Geometry();
-          lg.vertices.push(_pointArray[count - 1].position);
-          lg.vertices.push(_pointArray[count].position);
-          lineArray[count - 1] = new THREE.Line(lg, new THREE.LineBasicMaterial({
-            color : 0xff0000,
-            opacity : 0.5,
-            linewidth : 10
-          }));
-          scene.add(lineArray[count - 1]);
+          var lg = new THREE.Geometry()
+          lg.vertices.push(_pointArray[count - 1].position)
+          lg.vertices.push(_pointArray[count].position)
+          lineArray[count - 1] = new THREE.Line(
+            lg,
+            new THREE.LineBasicMaterial({
+              color: 0xff0000,
+              opacity: 0.5,
+              linewidth: 10,
+            }),
+          )
+          scene.add(lineArray[count - 1])
         }
 
         // カウントする
-        count++;
+        count++
       }
     }
   }
@@ -446,13 +475,13 @@ export default class ThreeBrain {
       scene.remove(point)
       scene.remove(_pointArray[i])
     })
-    lineArray.forEach(line => {
+    lineArray.forEach((line) => {
       scene.remove(line)
     })
-    for(let i = 0; i < mastaba.length - 4; i++){
-      mastaba.splice(5, 1);
+    for (let i = 0; i < mastaba.length - 4; i++) {
+      mastaba.splice(5, 1)
     }
-    count = 0;
-    targets = [];
+    count = 0
+    targets = []
   }
 }

@@ -11,18 +11,21 @@ export default class Shape {
   init() {
     // load Scan model
     this.loader = new THREE.JSONLoader(true)
-    this.loader.load("models/north_tex.json", function(geometry, materials){
+    this.loader.load(
+      'models/north_tex.json',
+      function (geometry, materials) {
         const material = new THREE.MeshPhongMaterial({
-          map: THREE.ImageUtils.loadTexture("models/north_texture.png")
-        });
+          map: THREE.ImageUtils.loadTexture('models/north_texture.png'),
+        })
         const mesh = new THREE.Mesh(geometry, material)
-        mesh.scale.set( 20, 20, 20 )
+        mesh.scale.set(20, 20, 20)
         // this.mastaba[0] = mesh
         // Common.scene.add(this.mastaba[0])
         console.log(mesh)
         Common.scene.add(mesh)
-    },
-    "models/");
+      },
+      'models/',
+    )
   }
 
   update() {

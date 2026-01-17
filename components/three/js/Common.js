@@ -48,7 +48,7 @@ class Common {
     )
     // this.camera.position.set(0, 0, +1000)
     this.camera.up.set(0, 1, 0)
-    this.controls = new THREE.FirstPersonControls(this.camera, $canvas);
+    this.controls = new THREE.FirstPersonControls(this.camera, $canvas)
     this.controls.movementSpeed = 10
     this.controls.lookSpeed = 0.2
 
@@ -75,7 +75,7 @@ class Common {
     this.time.delta = this.clock.getDelta()
     this.time.total += this.time.delta
     this.controls.update(this.time.delta)
-    this.renderer.clear();
+    this.renderer.clear()
 
     this.renderer.render(this.scene, this.camera)
   }

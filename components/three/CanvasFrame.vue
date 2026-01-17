@@ -1,6 +1,6 @@
 <template>
   <section class="artwork">
-    <canvas class="artwork__canvas" ref="canvas"></canvas>
+    <canvas ref="canvas" class="artwork__canvas" />
   </section>
 </template>
 
@@ -10,7 +10,6 @@ import ThreeBrain from './js/ThreeBrain'
 import EventBus from '~/utils/EventBus'
 
 export default {
-
   components: {},
   props: [],
   data() {
@@ -19,8 +18,13 @@ export default {
   },
   computed: {
     ...mapGetters({
-      regions: 'firebase/regions'
-    })
+      regions: 'firebase/regions',
+    }),
+  },
+  watch: {
+    regions(val) {
+      EventBus.$emit('DRAW_REGIONS', val)
+    },
   },
   mounted() {
     // canvas要素を渡す。
@@ -28,13 +32,8 @@ export default {
       $canvas: this.$refs.canvas,
     })
   },
-  destroyed() {
+  unmounted() {
     // canvasを作ったり壊したりする前提の場合はここに処理停止する処理を書く（今回省略）。
-  },
-  watch: {
-    regions(val) {
-      EventBus.$emit("DRAW_REGIONS", val)
-    },
   },
   methods: {
     // この中にthree.jsの処理をばりばり書かない。

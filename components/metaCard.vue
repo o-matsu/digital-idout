@@ -3,7 +3,8 @@
     dark
     hover
     :to="{
-      name: 'region-region-meta-meta', params: { region: $route.params.region, meta: id }
+      name: 'region-region-meta-meta',
+      params: { region: $route.params.region, meta: id },
     }"
   >
     <div class="d-flex flex-no-wrap justify-space-between">
@@ -15,27 +16,19 @@
         </div>
         <v-card-title
           class="text-h5 pt-0 d-inline-block text-truncate"
+          style="max-width: 200px"
           v-text="data.title"
-          style="max-width: 200px;"
-        ></v-card-title>
+        />
         <v-card-subtitle class="grey--text text-lighten-5">
-          <div
-            class="text-truncate"
-            style="max-width: 200px;"
-          >
+          <div class="text-truncate" style="max-width: 200px">
             {{ getUserName(data.authorId) }}
           </div>
           <div>{{ datetime }}</div>
         </v-card-subtitle>
       </div>
 
-      <v-avatar
-        v-if='data.files.length'
-        class="ma-3"
-        size="111"
-        tile
-      >
-        <v-img :src="data.files[0].src"></v-img>
+      <v-avatar v-if="data.files.length" class="ma-3" size="111" tile>
+        <v-img :src="data.files[0].src" />
       </v-avatar>
     </div>
   </v-card>
@@ -61,6 +54,4 @@ export default {
 }
 </script>
 
-<style>
-
-</style>
+<style></style>

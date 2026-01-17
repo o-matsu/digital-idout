@@ -27,10 +27,7 @@ export default defineNuxtConfig({
   css: ['vuetify/styles'],
 
   // Modules
-  modules: [
-    '@pinia/nuxt',
-    'nuxt-vuefire',
-  ],
+  modules: ['@pinia/nuxt', 'nuxt-vuefire'],
 
   // Vite plugins
   vite: {
@@ -42,17 +39,17 @@ export default defineNuxtConfig({
   // VueFire configuration
   vuefire: {
     config: {
-      apiKey: "AIzaSyCGZvZDWyjJdJMM3yRjTwkUg3g19Hgq6rI",
-      authDomain: "digital-idout.firebaseapp.com",
-      projectId: "digital-idout",
-      storageBucket: "digital-idout.appspot.com",
-      messagingSenderId: "397141445801",
-      appId: "1:397141445801:web:42b864b54ab5f7fef36db8",
-      measurementId: "G-7TLVQPRJFF"
+      apiKey: 'AIzaSyCGZvZDWyjJdJMM3yRjTwkUg3g19Hgq6rI',
+      authDomain: 'digital-idout.firebaseapp.com',
+      projectId: 'digital-idout',
+      storageBucket: 'digital-idout.appspot.com',
+      messagingSenderId: '397141445801',
+      appId: '1:397141445801:web:42b864b54ab5f7fef36db8',
+      measurementId: 'G-7TLVQPRJFF',
     },
     auth: {
       enabled: true,
-    }
+    },
   },
 
   // Auto import components
