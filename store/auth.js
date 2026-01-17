@@ -8,6 +8,15 @@ const initialState = () => ({
   },
 })
 
+// Helper to get Firebase instances (will be injected by plugin)
+let $fire = null
+let $fireModule = null
+
+export function setFirebase(fire, fireModule) {
+  $fire = fire
+  $fireModule = fireModule
+}
+
 export default {
   namespaced: true,
   state: initialState,
@@ -44,7 +53,6 @@ export default {
       }
       if (authUser && authUser.getIdToken) {
         try {
-          const { $fire, $fireModule } = useNuxtApp()
           const userDoc = await $fire.firestore
             .collection('users')
             .doc(authUser.uid)

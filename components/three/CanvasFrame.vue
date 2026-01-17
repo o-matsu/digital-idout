@@ -6,7 +6,6 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import ThreeBrain from './js/ThreeBrain'
 import EventBus from '~/utils/EventBus'
 
 export default {
@@ -26,11 +25,20 @@ export default {
       EventBus.$emit('DRAW_REGIONS', val)
     },
   },
-  mounted() {
-    // canvas要素を渡す。
-    this.threeBrain = new ThreeBrain({
-      $canvas: this.$refs.canvas,
-    })
+  async mounted() {
+    // Dynamic import for Three.js to avoid build issues
+    if (import.meta.client) {
+      try {
+        const ThreeBrainModule = await import('./js/ThreeBrain')
+        const ThreeBrain = ThreeBrainModule.default
+        // canvas要素を渡す。
+        this.threeBrain = new ThreeBrain({
+          $canvas: this.$refs.canvas,
+        })
+      } catch (error) {
+        console.error('Failed to load ThreeBrain:', error)
+      }
+    }
   },
   unmounted() {
     // canvasを作ったり壊したりする前提の場合はここに処理停止する処理を書く（今回省略）。

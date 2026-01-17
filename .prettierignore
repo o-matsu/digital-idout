@@ -73,9 +73,13 @@ typings/
 
 # nuxt.js build output
 .nuxt
+.output
 
 # Nuxt generate
 dist
+
+# Three.js libraries
+components/three/js/
 
 # vuepress build output
 .vuepress/dist

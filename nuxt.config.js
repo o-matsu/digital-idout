@@ -34,6 +34,14 @@ export default defineNuxtConfig({
     ssr: {
       noExternal: ['vuetify'],
     },
+    optimizeDeps: {
+      exclude: ['components/three/js'],
+    },
+    build: {
+      rollupOptions: {
+        external: [/components\/three\/js/],
+      },
+    },
   },
 
   // VueFire configuration
