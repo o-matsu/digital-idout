@@ -1,5 +1,10 @@
 <template>
-  <v-navigation-drawer v-model="drawer" absolute right permanent :width="width">
+  <v-navigation-drawer
+    v-model="drawer"
+    location="right"
+    :width="width"
+    color="grey-darken-3"
+  >
     <template v-slot:prepend>
       <div class="pa-2 d-flex justify-space-between">
         <h1>Data registration</h1>
@@ -10,78 +15,69 @@
       <v-divider />
     </template>
 
-    <v-stepper v-model="step">
-      <v-stepper-header>
-        <v-stepper-item
-          :complete="step > 1"
-          :value="1"
-          title="Create new region"
-        />
-        <v-divider />
-        <v-stepper-item
-          :complete="step > 2"
-          :value="2"
-          title="Enter information"
-        />
-        <v-divider />
-        <v-stepper-item
-          :complete="step > 3"
-          :value="3"
-          title="Upload data files"
-        />
-      </v-stepper-header>
+    <v-stepper-vertical v-model="step" class="bg-grey-darken-3">
+      <v-stepper-vertical-item
+        :complete="step > 1"
+        :value="1"
+        title="Create new region"
+      >
+        <small class="text-grey">
+          Point vertices of the region counterclockwise.
+        </small>
+        <template v-slot:actions>
+          <span></span>
+        </template>
+      </v-stepper-vertical-item>
 
-      <v-stepper-window>
-        <v-stepper-window-item :value="1">
-          <v-card flat class="pa-4">
-            <small class="text-grey">
-              Point vertices of the region counterclockwise.
-            </small>
-          </v-card>
-        </v-stepper-window-item>
+      <v-stepper-vertical-item
+        :complete="step > 2"
+        :value="2"
+        title="Enter information"
+      >
+        <v-form ref="formRef" v-model="valid" lazy-validation>
+          <v-text-field
+            label="TITLE"
+            v-model="meta.title"
+            :rules="requiredRule"
+          />
+          <v-select
+            :items="securityOptions"
+            label="SECURITY"
+            v-model="meta.target"
+            :rules="requiredRule"
+          ></v-select>
+          <v-textarea
+            label="DESCRIPTION"
+            rows="3"
+            v-model="meta.comment"
+            :rules="requiredRule"
+          />
+        </v-form>
+        <template v-slot:actions>
+          <v-btn color="primary" @click="goThird" :disabled="!valid">
+            Continue
+          </v-btn>
+        </template>
+      </v-stepper-vertical-item>
 
-        <v-stepper-window-item :value="2">
-          <v-card flat class="pa-4">
-            <v-form ref="formRef" v-model="valid" lazy-validation>
-              <v-text-field
-                label="TITLE"
-                v-model="meta.title"
-                :rules="requiredRule"
-              />
-              <v-select
-                :items="securityOptions"
-                label="SECURITY"
-                v-model="meta.target"
-                :rules="requiredRule"
-              ></v-select>
-              <v-textarea
-                label="DESCRIPTION"
-                rows="3"
-                v-model="meta.comment"
-                :rules="requiredRule"
-              />
-              <v-btn color="primary" @click="goThird" :disabled="!valid">
-                Continue
-              </v-btn>
-            </v-form>
-          </v-card>
-        </v-stepper-window-item>
-
-        <v-stepper-window-item :value="3">
-          <v-card flat class="pa-4">
-            <v-file-input
-              chips
-              multiple
-              label="select files"
-              accept="image/*, application/pdf"
-              v-model="files"
-            ></v-file-input>
-            <v-btn color="primary" @click="submit">Submit</v-btn>
-          </v-card>
-        </v-stepper-window-item>
-      </v-stepper-window>
-    </v-stepper>
-  </v-navigation-drawer>
+      <v-stepper-vertical-item
+        :complete="step > 3"
+        :value="3"
+        title="Upload data files"
+      >
+        <v-file-input
+          chips
+          multiple
+          label="select files"
+          accept="image/*, application/pdf"
+          v-model="files"
+        ></v-file-input>
+        <template v-slot:actions>
+          <v-btn color="primary" @click="submit">Submit</v-btn>
+        </template>
+      </v-stepper-vertical-item>
+    </v-stepper-vertical>
+    </v-navigation-drawer>
 </template>
 
 <script setup lang="ts">
@@ -147,8 +143,9 @@ const jumpRoot = () => {
   router.push({ name: 'index' })
 }
 
-const goThird = () => {
-  if (formRef.value?.validate()) {
+const goThird = async () => {
+  const { valid } = await formRef.value?.validate() || { valid: false }
+  if (valid) {
     step.value = 3
   }
 }
@@ -172,3 +169,4 @@ const submit = async () => {
   })
 }
 </script>
+
