@@ -177,6 +177,14 @@ export default class ThreeBrain {
 
   // drawRegions(_json, mmode) {
   drawRegions(regions) {
+    // 既存の領域をクリア
+    polyArray.forEach(poly => {
+      if (poly.parent) {
+        scene.remove(poly.parent) // lineを削除（meshはlineの子なので一緒に削除される）
+      }
+    })
+    polyArray.length = 0 // 配列をクリア
+
     const edgeArray = []
     const offset = 0.5
     regions.forEach(region => {

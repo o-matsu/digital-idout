@@ -58,8 +58,14 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async onAuthStateChanged(authUser: any) {
+      // リージョン再読み込み用にfirebaseStoreをインポート
+      const { useFirebaseStore } = await import('./firebase')
+      const firebaseStore = useFirebaseStore()
+
       if (!authUser) {
         this.resetStore()
+        // ログアウト時もリージョンを再読み込み（GENERALのみ表示）
+        await firebaseStore.loadRoleRegions()
         return
       }
 
@@ -86,6 +92,10 @@ export const useAuthStore = defineStore('auth', {
 
           this.setStoreUser(storeUser as { displayName: string; role: string })
           this.setAuthUser(authUser)
+
+          // ログイン後にリージョンを再読み込み（ユーザーのroleに基づく）
+          console.log('Auth state changed, reloading regions for role:', storeUser?.role)
+          await firebaseStore.loadRoleRegions()
         } catch (e) {
           console.error(e)
         }

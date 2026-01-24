@@ -29,6 +29,11 @@ onMounted(() => {
     threeBrain = new ThreeBrain({
       $canvas: canvas.value
     })
+    // ThreeBrain初期化後に既存のリージョンを描画
+    if (regions.value && regions.value.length > 0) {
+      console.log('CanvasFrame: drawing initial regions after ThreeBrain init', regions.value)
+      emit('DRAW_REGIONS', regions.value)
+    }
   }
 })
 
@@ -37,9 +42,12 @@ onUnmounted(() => {
   threeBrain = null
 })
 
-// Watchers
+// Watchers - リージョンが変更されたら描画（ただしThreeBrain初期化後のみ）
 watch(regions, (val) => {
-  emit('DRAW_REGIONS', val)
+  if (threeBrain && val && val.length > 0) {
+    console.log('CanvasFrame: regions changed, emitting DRAW_REGIONS', val)
+    emit('DRAW_REGIONS', val)
+  }
 })
 </script>
 

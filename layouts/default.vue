@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import {
   GoogleAuthProvider,
-  signInWithRedirect,
+  signInWithPopup,
   signOut as firebaseSignOut
 } from 'firebase/auth'
 import { useFirebaseAuth } from 'vuefire'
@@ -104,9 +104,13 @@ watch(showRegions, (flag) => {
 })
 
 // Methods
-const signIn = () => {
+const signIn = async () => {
   const provider = new GoogleAuthProvider()
-  signInWithRedirect(auth, provider)
+  try {
+    await signInWithPopup(auth, provider)
+  } catch (error) {
+    console.error('Login failed:', error)
+  }
 }
 
 const signOut = async () => {

@@ -131,7 +131,10 @@ export const useFirebaseStore = defineStore('firebase', {
 
     async fetchRoleRegions(): Promise<Region[]> {
       const authStore = useAuthStore()
-      const role = authStore.isAuth ? authStore.getUser.role : 'GENERAL'
+      const isAuth = authStore.isAuth
+      const userRole = authStore.getUser.role
+      const role = isAuth ? userRole : 'GENERAL'
+      console.log('fetchRoleRegions - isAuth:', isAuth, 'userRole:', userRole, 'using role:', role)
       let regions: Region[] = []
 
       for (let i = 0; i < roleLevel.indexOf(role) + 1; i++) {
@@ -141,7 +144,9 @@ export const useFirebaseStore = defineStore('firebase', {
     },
 
     async loadRoleRegions() {
+      console.log('loadRoleRegions called')
       const regions = await this.fetchRoleRegions()
+      console.log('Regions loaded:', regions)
       this.setRegions(regions)
     },
 
