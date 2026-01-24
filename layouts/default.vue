@@ -4,30 +4,30 @@
       <v-toolbar-title v-text="title" />
       <v-spacer />
       <div>
-        <v-tooltip bottom>
-          <template v-if="!showRegions" v-slot:activator="{ on, attrs }">
-            <v-btn icon @click='showRegions = true' v-bind="attrs" v-on="on">
-              <v-icon>mdi-eye</v-icon>
-            </v-btn>
-          </template>
-          <template v-else v-slot:activator="{ on, attrs }">
-            <v-btn icon @click='showRegions = false' v-bind="attrs" v-on="on">
-              <v-icon>mdi-eye-off</v-icon>
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn icon v-bind="props" @click="showRegions = !showRegions">
+              <v-icon>{{ showRegions ? 'mdi-eye-off' : 'mdi-eye' }}</v-icon>
             </v-btn>
           </template>
           <span>Switch view mode</span>
         </v-tooltip>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn icon :disabled='!isAuth' v-bind="attrs" v-on="on" :to="{ name: 'register' }">
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              icon
+              :disabled="!isAuth"
+              v-bind="props"
+              :to="{ name: 'register' }"
+            >
               <v-icon>mdi-map-marker-plus</v-icon>
             </v-btn>
           </template>
           <span>Data registration</span>
         </v-tooltip>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn icon disabled v-bind="attrs" v-on="on">
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn icon disabled v-bind="props">
               <v-icon>mdi-layers-triple</v-icon>
             </v-btn>
           </template>
@@ -35,22 +35,16 @@
         </v-tooltip>
       </div>
       <v-spacer />
-      <v-btn v-if='!isAuth' text @click="SignIn">
-        Sign in
-      </v-btn>
+      <v-btn v-if="!isAuth" text @click="signIn">Sign in</v-btn>
       <v-menu v-else offset-y>
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn
-            text
-            v-bind="attrs"
-            v-on="on"
-          >
-            <v-chip label outlined x-small>{{ user.role }}</v-chip>
+        <template v-slot:activator="{ props }">
+          <v-btn text v-bind="props">
+            <v-chip label outlined size="x-small">{{ user.role }}</v-chip>
             <span>{{ user.name }}</span>
           </v-btn>
         </template>
         <v-list>
-          <v-list-item @click='signOut'>
+          <v-list-item @click="signOut">
             <v-list-item-title>Sign out</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -58,85 +52,69 @@
     </v-app-bar>
 
     <v-main>
-      <Nuxt />
+      <slot />
     </v-main>
 
-    <CanvasFrame />
+    <ThreeCanvasFrame />
   </v-app>
 </template>
 
-<script>
-import { mapGetters } from 'vuex'
-import CanvasFrame from '~/components/three/CanvasFrame'
-import EventBus from '~/utils/EventBus'
-export default {
-  name: 'DefaultLayout',
-  components: {
-    CanvasFrame
-  },
-  mounted(){
-  },
-  data() {
-    return {
-      clipped: false,
-      drawer: false,
-      fixed: false,
-      items: [
-        {
-          icon: 'mdi-apps',
-          title: 'Welcome',
-          to: '/',
-        },
-        {
-          icon: 'mdi-chart-bubble',
-          title: 'Inspire',
-          to: '/inspire',
-        },
-      ],
-      miniVariant: false,
-      right: true,
-      rightDrawer: false,
-      title: 'Digital Idout',
-      showRegions: false,
+<script setup lang="ts">
+import {
+  GoogleAuthProvider,
+  signInWithRedirect,
+  signOut as firebaseSignOut
+} from 'firebase/auth'
+import { useFirebaseAuth } from 'vuefire'
+import { useAuthStore } from '~/stores/auth'
+import { useFirebaseStore } from '~/stores/firebase'
+import { useEventBus } from '~/composables/useEventBus'
+
+const route = useRoute()
+const authStore = useAuthStore()
+const firebaseStore = useFirebaseStore()
+const { emit } = useEventBus()
+const auth = useFirebaseAuth()!
+
+// Data
+const clipped = ref(false)
+const title = ref('Digital Idout')
+const showRegions = ref(false)
+
+// Computed
+const isAuth = computed(() => authStore.isAuth)
+const user = computed(() => authStore.getUser)
+
+// Watchers
+watch(
+  () => route.name,
+  (newVal, oldVal) => {
+    if (newVal === 'register') {
+      emit('TOGGLE_PICKING_MODE', true)
+    }
+    if (oldVal === 'register') {
+      emit('TOGGLE_PICKING_MODE', false)
     }
   },
-  computed: {
-    ...mapGetters({
-      isAuth: 'auth/isAuth',
-      user: 'auth/getUser'
-    }),
-  },
-  watch: {
-    // routeが変わるときにシーンを変えるなどなにか処理する
-    '$route.name': {
-      handler(newVal, oldVal) {
-        if (newVal === 'register') {
-          EventBus.$emit("TOGGLE_PICKING_MODE", true)
-        }
-        if (oldVal === 'register') {
-          EventBus.$emit("TOGGLE_PICKING_MODE", false)
-        }
-      },
-      deep: true,
-      immediate: true,
-    },
-    showRegions(flag) {
-      EventBus.$emit("TOGGLE_REGIONS_VIEW", flag)
-    },
-  },
-  methods: {
-    SignIn() {
-      const provider = new this.$fireModule.auth.GoogleAuthProvider()
-      this.$fire.auth.signInWithRedirect(provider)
-    },
-    async signOut() {
-      try {
-        await this.$fire.auth.signOut()
-        this.$store.dispatch('firebase/resetStore')
-      } catch (error) {
-        console.log('failed logout')
-      }
-    },
-  },
+  { immediate: true }
+)
+
+watch(showRegions, (flag) => {
+  emit('TOGGLE_REGIONS_VIEW', flag)
+})
+
+// Methods
+const signIn = () => {
+  const provider = new GoogleAuthProvider()
+  signInWithRedirect(auth, provider)
+}
+
+const signOut = async () => {
+  try {
+    await firebaseSignOut(auth)
+    firebaseStore.resetStore()
+  } catch (error) {
+    console.log('failed logout')
+  }
 }
 </script>

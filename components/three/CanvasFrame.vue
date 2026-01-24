@@ -1,45 +1,46 @@
 <template>
-  <section class="artwork">
+  <section class="artwork" @click="handleClick">
     <canvas class="artwork__canvas" ref="canvas"></canvas>
   </section>
 </template>
 
-<script>
-import { mapGetters } from 'vuex'
+<script setup lang="ts">
 import ThreeBrain from './js/ThreeBrain'
-import EventBus from '~/utils/EventBus'
+import { useFirebaseStore } from '~/stores/firebase'
+import { useEventBus } from '~/composables/useEventBus'
 
-export default {
+const firebaseStore = useFirebaseStore()
+const { emit } = useEventBus()
 
-  components: {},
-  props: [],
-  data() {
-    // 基本的にはここにthree.jsのオブジェクトを追加しない。
-    return {}
-  },
-  computed: {
-    ...mapGetters({
-      regions: 'firebase/regions'
-    })
-  },
-  mounted() {
-    // canvas要素を渡す。
-    this.threeBrain = new ThreeBrain({
-      $canvas: this.$refs.canvas,
-    })
-  },
-  destroyed() {
-    // canvasを作ったり壊したりする前提の場合はここに処理停止する処理を書く（今回省略）。
-  },
-  watch: {
-    regions(val) {
-      EventBus.$emit("DRAW_REGIONS", val)
-    },
-  },
-  methods: {
-    // この中にthree.jsの処理をばりばり書かない。
-  },
+const canvas = ref<HTMLCanvasElement | null>(null)
+let threeBrain: ThreeBrain | null = null
+
+// Computed
+const regions = computed(() => firebaseStore.getRegions)
+
+// Methods
+const handleClick = (e: MouseEvent) => {
+  emit('MOUSE_CLICK', e)
 }
+
+// Lifecycle
+onMounted(() => {
+  if (canvas.value) {
+    threeBrain = new ThreeBrain({
+      $canvas: canvas.value
+    })
+  }
+})
+
+onUnmounted(() => {
+  // Cleanup if needed
+  threeBrain = null
+})
+
+// Watchers
+watch(regions, (val) => {
+  emit('DRAW_REGIONS', val)
+})
 </script>
 
 <style>
@@ -50,5 +51,12 @@ export default {
   width: 100%;
   height: 100%;
   cursor: pointer;
+  z-index: 0;
+}
+
+.artwork__canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 </style>

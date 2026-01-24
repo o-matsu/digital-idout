@@ -2,7 +2,7 @@
 // import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls.js'
 // require('./lib/three_r70.min.js')
 import THREE from './lib/three_r70.min.js'
-require('./lib/myFirstPersonControls2.js')
+import './lib/myFirstPersonControls2.js'
 
 class Common {
   constructor() {

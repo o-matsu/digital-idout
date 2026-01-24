@@ -1,35 +1,32 @@
 <template>
-  <v-row>
-  </v-row>
+  <v-row></v-row>
 </template>
 
-<script>
-import { mapGetters } from 'vuex'
-import EventBus from '~/utils/EventBus'
-export default {
-  name: 'IndexPage',
-  asyncData({ store }) {
-    store.dispatch('firebase/loadRoleRegions')
-  },
-  components: {
-  },
-  mounted(){
-    // イベント登録
-    EventBus.$on("PICK_REGIONS", this.pickRegions);
-  },
-  computed: {
-    ...mapGetters({
-    })
-  },
-  data() {
-    return {}
-  },
-  watch: {
-  },
-  methods: {
-    pickRegions(targets) {
-      this.$router.push({ name: 'region-region', params: { region: targets[0].object.name }})
-    },
-  },
+<script setup lang="ts">
+import { useFirebaseStore } from '~/stores/firebase'
+import { useEventBus } from '~/composables/useEventBus'
+
+const router = useRouter()
+const firebaseStore = useFirebaseStore()
+const { on, off } = useEventBus()
+
+// Replace asyncData with useAsyncData
+await useAsyncData('regions', () => firebaseStore.loadRoleRegions())
+
+// Event handling
+const pickRegions = (targets: any[]) => {
+  router.push({
+    name: 'region-region',
+    params: { region: targets[0].object.name }
+  })
 }
+
+// Lifecycle hooks
+onMounted(() => {
+  on('PICK_REGIONS', pickRegions)
+})
+
+onUnmounted(() => {
+  off('PICK_REGIONS', pickRegions)
+})
 </script>

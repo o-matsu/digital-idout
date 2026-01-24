@@ -1,8 +1,8 @@
 // import Common from './Common'
 // import Shape from './Shape'
 import THREE from './lib/three_r70.min.js'
-import EventBus from '~/utils/EventBus'
-require('./lib/myFirstPersonControls2.js')
+import { eventBus } from '~/composables/useEventBus'
+import './lib/myFirstPersonControls2.js'
 
 let renderer
 let scene
@@ -28,10 +28,10 @@ export default class ThreeBrain {
     this.props = props
     this.init()
     //
-    EventBus.$on("DRAW_REGIONS", this.drawRegions.bind(this));
-    EventBus.$on("TOGGLE_REGIONS_VIEW", this.toggleRegionsView.bind(this));
-    EventBus.$on("MOUSE_CLICK", this.mouseClick.bind(this));
-    EventBus.$on("TOGGLE_PICKING_MODE", this.togglePickingMode.bind(this));
+    eventBus.on("DRAW_REGIONS", this.drawRegions.bind(this));
+    eventBus.on("TOGGLE_REGIONS_VIEW", this.toggleRegionsView.bind(this));
+    eventBus.on("MOUSE_CLICK", this.mouseClick.bind(this));
+    eventBus.on("TOGGLE_PICKING_MODE", this.togglePickingMode.bind(this));
   }
 
   init() {
@@ -299,7 +299,7 @@ export default class ThreeBrain {
       if (pickingMode) {
         this.createRegion()
       } else if (targets[0].object.name !== "point0") {
-        EventBus.$emit("PICK_REGIONS", targets)
+        eventBus.emit("PICK_REGIONS", targets)
       }
     }
   }
@@ -391,7 +391,7 @@ export default class ThreeBrain {
         var myRet = confirm("Do you want to add this region?");
         if (myRet == true) {
           pickingMode = false
-          EventBus.$emit("REGISTER_SECOND_STEP", pointArray)
+          eventBus.emit("REGISTER_SECOND_STEP", pointArray)
         } else {
           this.resetCreateTarget()
         }
