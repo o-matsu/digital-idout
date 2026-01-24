@@ -87,8 +87,8 @@
 
 <script setup lang="ts">
 import { format } from 'date-fns'
-import { useFirebaseStore } from '~/stores/firebase'
-import { useAuthStore } from '~/stores/auth'
+import { useFirebaseStore } from '~~/stores/firebase'
+import { useAuthStore } from '~~/stores/auth'
 
 const route = useRoute()
 const router = useRouter()

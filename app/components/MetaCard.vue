@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { format } from 'date-fns'
-import { useFirebaseStore } from '~/stores/firebase'
+import { useFirebaseStore } from '~~/stores/firebase'
 
 interface MetaData {
   targetRole: string

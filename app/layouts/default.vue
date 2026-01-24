@@ -66,8 +66,8 @@ import {
   signOut as firebaseSignOut
 } from 'firebase/auth'
 import { useFirebaseAuth } from 'vuefire'
-import { useAuthStore } from '~/stores/auth'
-import { useFirebaseStore } from '~/stores/firebase'
+import { useAuthStore } from '~~/stores/auth'
+import { useFirebaseStore } from '~~/stores/firebase'
 import { useEventBus } from '~/composables/useEventBus'
 
 const route = useRoute()

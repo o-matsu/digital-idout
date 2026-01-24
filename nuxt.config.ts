@@ -93,6 +93,6 @@ export default defineNuxtConfig({
     shim: false
   },
 
-  // Compatibility date for Nuxt 3
-  compatibilityDate: '2025-01-19'
+  // Compatibility date for Nuxt 4
+  compatibilityDate: '2025-01-24'
 })

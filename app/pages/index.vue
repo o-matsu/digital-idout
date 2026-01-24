@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFirebaseStore } from '~/stores/firebase'
+import { useFirebaseStore } from '~~/stores/firebase'
 import { useEventBus } from '~/composables/useEventBus'
 
 const router = useRouter()

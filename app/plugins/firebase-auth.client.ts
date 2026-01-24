@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import { useAuthStore } from '~/stores/auth'
+import { useAuthStore } from '~~/stores/auth'
 
 export default defineNuxtPlugin(() => {
   const authStore = useAuthStore()
