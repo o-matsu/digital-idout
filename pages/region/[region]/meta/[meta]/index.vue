@@ -3,8 +3,9 @@
     v-model="dataViewerDrawer"
     absolute
     temporary
-    right
+    location="right"
     :width="360"
+    color="grey-darken-3"
   >
     <template v-slot:prepend>
       <div class="pa-2 d-flex justify-space-between">

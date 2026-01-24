@@ -3,8 +3,9 @@
     v-model="dataViewerDrawer"
     absolute
     temporary
-    right
+    location="right"
     :width="360"
+    color="grey-darken-3"
   >
     <template v-slot:prepend>
       <div class="pa-2 d-flex justify-space-between">
@@ -16,7 +17,7 @@
       <v-divider />
     </template>
 
-    <v-row class="pa-2">
+    <v-row class="pa-4">
       <v-col v-for="(meta, i) in metas" :key="i" cols="12">
         <MetaCard :data="meta.data" :id="meta.id" />
       </v-col>

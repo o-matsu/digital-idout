@@ -19,7 +19,7 @@
           v-text="data.title"
           style="max-width: 200px"
         ></v-card-title>
-        <v-card-subtitle class="text-grey-lighten-5">
+        <v-card-subtitle class="text-grey-lighten-5 mb-4">
           <div class="text-truncate" style="max-width: 200px">
             {{ getUserName(data.authorId) }}
           </div>
