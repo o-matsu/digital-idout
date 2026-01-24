@@ -59,19 +59,28 @@ const regionId = computed(() => route.params.region as string)
 // Data
 const dataViewerDrawer = ref(true)
 
-// Replace asyncData with useAsyncData
-const { data } = await useAsyncData(
-  `region-${regionId.value}`,
+// Load metas function
+const loadMetas = async () => {
+  // Ensure regions are loaded first (for direct URL access)
+  if (firebaseStore.getRegions.length === 0) {
+    await firebaseStore.loadRoleRegions()
+  }
+  // Force reload to get metas with current auth role
+  await firebaseStore.loadMetasByRegion(regionId.value, true)
+}
+
+// Watch auth state changes to reload metas with correct permissions
+watch(
+  () => authStore.isAuth,
   async () => {
-    await firebaseStore.loadMetasByRegion(regionId.value, false)
-    const metas = firebaseStore.getMetasByRegion(regionId.value)
-    if (!metas || metas.length === 0) {
-      // Check if region exists but has no metas (valid case) vs invalid region
-      return { valid: true }
-    }
-    return { valid: true }
+    await loadMetas()
   }
 )
+
+// Initial load
+onMounted(async () => {
+  await loadMetas()
+})
 
 // Computed
 const isAuth = computed(() => authStore.isAuth)

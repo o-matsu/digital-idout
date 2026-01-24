@@ -100,14 +100,39 @@ const regionId = computed(() => route.params.region as string)
 
 // Data
 const dataViewerDrawer = ref(true)
+const authInitialized = ref(false)
 
-// Replace asyncData with useAsyncData
-await useAsyncData(`meta-${metaId.value}`, async () => {
-  if (!firebaseStore.getMetaById(metaId.value)) {
-    await firebaseStore.loadMetasByRegion(regionId.value, true)
-    if (!firebaseStore.getMetaById(metaId.value)) {
-      await navigateTo({ name: 'index' })
+// Load meta function
+const loadMeta = async (shouldRedirect: boolean = false) => {
+  // Ensure regions are loaded first (for direct URL access)
+  if (firebaseStore.getRegions.length === 0) {
+    await firebaseStore.loadRoleRegions()
+  }
+  await firebaseStore.loadMetasByRegion(regionId.value, true)
+  // Only redirect if auth is initialized and meta still not found
+  if (shouldRedirect && !firebaseStore.getMetaById(metaId.value)) {
+    await navigateTo({ name: 'index' })
+  }
+}
+
+// Watch auth state changes to reload meta with correct permissions
+watch(
+  () => authStore.isAuth,
+  async (newVal, oldVal) => {
+    // Only reload when auth state actually changes (not on initial undefined)
+    if (oldVal !== undefined) {
+      authInitialized.value = true
+      await loadMeta(true)
     }
+  }
+)
+
+// Initial load - don't redirect yet, wait for auth to settle
+onMounted(async () => {
+  await loadMeta(false)
+  // If auth is already initialized (e.g., from previous navigation), mark it
+  if (authStore.isAuth !== undefined) {
+    authInitialized.value = true
   }
 })
 
