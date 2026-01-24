@@ -1,12 +1,16 @@
 <template>
-  <v-navigation-drawer
-    v-model="dataViewerDrawer"
-    absolute
-    temporary
-    location="right"
-    :width="360"
-    color="grey-darken-3"
-  >
+  <div>
+    <div
+      v-if="dataViewerDrawer"
+      class="drawer-backdrop"
+      @click="dataViewerDrawer = false"
+    ></div>
+    <v-navigation-drawer
+      v-model="dataViewerDrawer"
+      location="right"
+      :width="360"
+      color="grey-darken-3"
+    >
     <template v-slot:prepend>
       <div class="pa-2 d-flex justify-space-between">
         <h1>Data list</h1>
@@ -38,7 +42,8 @@
         </v-btn>
       </div>
     </template>
-  </v-navigation-drawer>
+    </v-navigation-drawer>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -79,3 +84,15 @@ watch(dataViewerDrawer, (val) => {
   }
 })
 </script>
+
+<style scoped>
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+</style>
