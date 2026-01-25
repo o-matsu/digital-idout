@@ -20,11 +20,13 @@
     "nuxt": "^4.3.0",
     "nuxt-vuefire": "^1.0.4",
     "pinia": "^2.3.0",
+    "three": "^0.182.0",
     "vue": "^3.5.13",
     "vuefire": "^3.2.2"
   },
   "devDependencies": {
     "@nuxt/eslint": "^0.7.4",
+    "@types/three": "^0.182.0",
     "@vite-pwa/nuxt": "^0.10.6",
     "eslint": "^9.39.2",
     "sass": "^1.83.1",
