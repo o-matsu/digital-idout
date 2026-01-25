@@ -49,11 +49,13 @@ export default class ThreeBrain {
   }
 
   initThree($canvas) {
+    this.$canvas = $canvas
     renderer = new THREE.WebGLRenderer({
       canvas: $canvas,
     })
     if (!renderer) alert('初期化失敗')
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    const { width, height } = this.getContainerSize()
+    renderer.setSize(width, height)
     renderer.setClearColor(0x000000, 1.0)
     scene = new THREE.Scene()
 
@@ -61,10 +63,19 @@ export default class ThreeBrain {
     renderer.domElement.addEventListener('mousemove', this.mouseMove.bind(this), false);
   }
 
+  getContainerSize() {
+    const container = this.$canvas.parentElement
+    return {
+      width: container ? container.clientWidth : window.innerWidth,
+      height: container ? container.clientHeight : window.innerHeight
+    }
+  }
+
   initCamera($canvas) {
+    const { width, height } = this.getContainerSize()
     camera = new THREE.PerspectiveCamera(
       50,
-      window.innerWidth / window.innerHeight,
+      width / height,
       1,
       400,
     )
@@ -259,19 +270,21 @@ export default class ThreeBrain {
   }
 
   resize() {
-    camera.aspect = window.innerWidth / window.innerHeight
+    const { width, height } = this.getContainerSize()
+    camera.aspect = width / height
     camera.updateProjectionMatrix()
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setSize(width, height)
     controls.handleResize()
   }
 
   mouseMove(e) {
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
+    const { width, height } = this.getContainerSize()
 
     e.preventDefault();
-    mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1
-    mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1
+    mouse.x = ( e.clientX / width ) * 2 - 1
+    mouse.y = - ( e.clientY / height ) * 2 + 1
     const vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera)
     raycaster.set( camera.position, vector.sub( camera.position ).normalize())
 
