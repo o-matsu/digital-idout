@@ -1,0 +1,33 @@
+name: Verify Firebase Hosting build on PR
+
+on: pull_request
+
+jobs:
+  build_check:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+      - name: Verify build output
+        run: |
+          if [ -d ".output/public" ]; then
+            echo "✅ Build output directory exists"
+            ls -la .output/public
+          else
+            echo "❌ Build output directory not found"
+            exit 1
+          fi
