@@ -12,7 +12,14 @@
 import * as THREE from 'three'
 import { eventBus } from '~/composables/useEventBus'
 
-const STATE = { NONE: -1, ROTATE: 0, DOLLY: 1, PAN: 2 }
+const STATE = {
+  NONE: -1,
+  ROTATE: 0,
+  DOLLY: 1,
+  PAN: 2,
+  TOUCH_ROTATE: 3,
+  TOUCH_DOLLY: 4
+}
 
 class CustomFirstPersonControls {
   constructor(camera, domElement) {
@@ -25,6 +32,10 @@ class CustomFirstPersonControls {
     this.rotateSpeed = 50
     this.panSpeed = 1.0
     this.zoomSpeed = 0.5
+
+    // Touch settings
+    this.touchRotateSpeed = 25
+    this.touchZoomSpeed = 0.5
 
     this.lookVertical = true
     this.autoForward = false
@@ -96,11 +107,17 @@ class CustomFirstPersonControls {
     this._quatInverse = this._quat.clone().invert()
     this._offset = new THREE.Vector3()
 
+    // Pointer tracking for multi-touch
+    this._pointers = []
+    this._pointerPositions = {}
+
+    // Touch timing for tap detection
+    this._touchStartTime = 0
+
     // Bind event handlers
-    this._onMouseDown = this._handleMouseDown.bind(this)
-    this._onMouseUp = this._handleMouseUp.bind(this)
-    this._onMouseMove = this._handleMouseMove.bind(this)
-    this._onMouseOut = this._handleMouseOut.bind(this)
+    this._onPointerDown = this._handlePointerDown.bind(this)
+    this._onPointerMove = this._handlePointerMove.bind(this)
+    this._onPointerUp = this._handlePointerUp.bind(this)
     this._onMouseWheel = this._handleMouseWheel.bind(this)
     this._onKeyDown = this._handleKeyDown.bind(this)
     this._onKeyUp = this._handleKeyUp.bind(this)
@@ -112,27 +129,28 @@ class CustomFirstPersonControls {
   }
 
   _connect() {
-    this.domElement.addEventListener('mousedown', this._onMouseDown, false)
-    this.domElement.addEventListener('mouseup', this._onMouseUp, false)
-    this.domElement.addEventListener('mousemove', this._onMouseMove, false)
-    this.domElement.addEventListener('mouseout', this._onMouseOut, false)
+    this.domElement.addEventListener('pointerdown', this._onPointerDown, false)
+    this.domElement.addEventListener('pointercancel', this._onPointerUp, false)
     this.domElement.addEventListener('wheel', this._onMouseWheel, false)
     this.domElement.addEventListener('contextmenu', this._onContextMenu, false)
     window.addEventListener('keydown', this._onKeyDown, false)
     window.addEventListener('keyup', this._onKeyUp, false)
 
     this.domElement.setAttribute('tabindex', -1)
+    this.domElement.style.touchAction = 'none' // Disable browser touch gestures
   }
 
   dispose() {
-    this.domElement.removeEventListener('mousedown', this._onMouseDown)
-    this.domElement.removeEventListener('mouseup', this._onMouseUp)
-    this.domElement.removeEventListener('mousemove', this._onMouseMove)
-    this.domElement.removeEventListener('mouseout', this._onMouseOut)
+    this.domElement.removeEventListener('pointerdown', this._onPointerDown)
+    this.domElement.removeEventListener('pointercancel', this._onPointerUp)
+    this.domElement.ownerDocument.removeEventListener('pointermove', this._onPointerMove)
+    this.domElement.ownerDocument.removeEventListener('pointerup', this._onPointerUp)
     this.domElement.removeEventListener('wheel', this._onMouseWheel)
     this.domElement.removeEventListener('contextmenu', this._onContextMenu)
     window.removeEventListener('keydown', this._onKeyDown)
     window.removeEventListener('keyup', this._onKeyUp)
+
+    this.domElement.style.touchAction = 'auto'
   }
 
   handleResize() {
@@ -145,8 +163,78 @@ class CustomFirstPersonControls {
     }
   }
 
-  // Mouse event handlers
-  _handleMouseDown(event) {
+  // Pointer event handlers
+  _handlePointerDown(event) {
+    if (!this.enabled) return
+
+    // First pointer - add document listeners
+    if (this._pointers.length === 0) {
+      this.domElement.setPointerCapture(event.pointerId)
+      this.domElement.ownerDocument.addEventListener('pointermove', this._onPointerMove)
+      this.domElement.ownerDocument.addEventListener('pointerup', this._onPointerUp)
+    }
+
+    // Track this pointer
+    this._addPointer(event)
+
+    if (event.pointerType === 'touch') {
+      this._handleTouchStart(event)
+    } else {
+      this._handleMouseStart(event)
+    }
+  }
+
+  _handlePointerMove(event) {
+    if (!this.enabled) return
+
+    if (event.pointerType === 'touch') {
+      this._handleTouchMove(event)
+    } else {
+      this._handleMouseMove(event)
+    }
+  }
+
+  _handlePointerUp(event) {
+    this._removePointer(event)
+
+    if (this._pointers.length === 0) {
+      this.domElement.releasePointerCapture(event.pointerId)
+      this.domElement.ownerDocument.removeEventListener('pointermove', this._onPointerMove)
+      this.domElement.ownerDocument.removeEventListener('pointerup', this._onPointerUp)
+
+      // Tap detection for touch
+      if (event.pointerType === 'touch') {
+        const elapsed = performance.now() - this._touchStartTime
+        const TAP_THRESHOLD_TIME = 300 // ms
+        const TAP_THRESHOLD_DISTANCE = 10 // px
+
+        if (this._dragDistance < TAP_THRESHOLD_DISTANCE && elapsed < TAP_THRESHOLD_TIME) {
+          eventBus.emit('MOUSE_CLICK', event)
+        }
+      } else if (this._dragDistance < 10 && this._state === STATE.ROTATE) {
+        // Mouse click detection
+        eventBus.emit('MOUSE_CLICK', event)
+      }
+
+      this._state = STATE.NONE
+      this.mouseDragOn = false
+      this._mouseX = 0
+      this._mouseY = 0
+    } else if (this._pointers.length === 1 && event.pointerType === 'touch') {
+      // Going from 2 fingers to 1 - switch back to rotate
+      const pointerId = this._pointers[0]
+      const position = this._pointerPositions[pointerId]
+      if (position) {
+        this._state = STATE.TOUCH_ROTATE
+        this._dragDistance = 0
+        this._prevMouseX = position.x - this.domElement.offsetLeft - this._viewHalfX
+        this._prevMouseY = position.y - this.domElement.offsetTop - this._viewHalfY
+      }
+    }
+  }
+
+  // Mouse-specific handlers
+  _handleMouseStart(event) {
     this._dragDistance = 0
 
     if (event.button === 0) {
@@ -165,18 +253,6 @@ class CustomFirstPersonControls {
     }
 
     this.mouseDragOn = true
-  }
-
-  _handleMouseUp(event) {
-    // If drag distance is small, treat as click
-    if (this._dragDistance < 10 && this._state === STATE.ROTATE) {
-      eventBus.emit('MOUSE_CLICK', event)
-    }
-
-    this._mouseX = 0
-    this._mouseY = 0
-    this._state = STATE.NONE
-    this.mouseDragOn = false
   }
 
   _handleMouseMove(event) {
@@ -214,10 +290,95 @@ class CustomFirstPersonControls {
     }
   }
 
-  _handleMouseOut() {
-    this._mouseX = 0
-    this._mouseY = 0
-    this.mouseDragOn = false
+  // Touch-specific handlers
+  _handleTouchStart(event) {
+    this._trackPointer(event)
+    this._touchStartTime = performance.now()
+    this._dragDistance = 0
+
+    if (this._pointers.length === 1) {
+      // Single finger - rotate
+      this._state = STATE.TOUCH_ROTATE
+      this._prevMouseX = event.pageX - this.domElement.offsetLeft - this._viewHalfX
+      this._prevMouseY = event.pageY - this.domElement.offsetTop - this._viewHalfY
+    } else if (this._pointers.length === 2) {
+      // Two fingers - pinch zoom
+      this._state = STATE.TOUCH_DOLLY
+      const position = this._getSecondPointerPosition(event)
+      if (position) {
+        const dx = event.pageX - position.x
+        const dy = event.pageY - position.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        this._dollyStart.set(0, distance)
+      }
+    }
+
+    this.mouseDragOn = true
+  }
+
+  _handleTouchMove(event) {
+    this._trackPointer(event)
+
+    if (this._state === STATE.TOUCH_ROTATE) {
+      this._dragDistance++
+
+      const currentX = event.pageX - this.domElement.offsetLeft - this._viewHalfX
+      const currentY = event.pageY - this.domElement.offsetTop - this._viewHalfY
+
+      this._mouseX = (this._prevMouseX - currentX) * this.touchRotateSpeed
+      this._mouseY = (this._prevMouseY - currentY) * this.touchRotateSpeed
+
+      this._prevMouseX = currentX
+      this._prevMouseY = currentY
+    } else if (this._state === STATE.TOUCH_DOLLY) {
+      const position = this._getSecondPointerPosition(event)
+      if (position) {
+        const dx = event.pageX - position.x
+        const dy = event.pageY - position.y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+
+        this._dollyEnd.set(0, distance)
+        const dollyScale = this._dollyEnd.y / this._dollyStart.y
+
+        if (dollyScale > 1) {
+          this._dollyIn(Math.pow(dollyScale, this.touchZoomSpeed))
+        } else if (dollyScale < 1) {
+          this._dollyOut(Math.pow(1 / dollyScale, this.touchZoomSpeed))
+        }
+
+        this._dollyStart.copy(this._dollyEnd)
+      }
+    }
+  }
+
+  // Pointer tracking helpers
+  _addPointer(event) {
+    this._pointers.push(event.pointerId)
+    this._trackPointer(event)
+  }
+
+  _removePointer(event) {
+    delete this._pointerPositions[event.pointerId]
+    const index = this._pointers.indexOf(event.pointerId)
+    if (index !== -1) {
+      this._pointers.splice(index, 1)
+    }
+  }
+
+  _trackPointer(event) {
+    let position = this._pointerPositions[event.pointerId]
+    if (!position) {
+      position = new THREE.Vector2()
+      this._pointerPositions[event.pointerId] = position
+    }
+    position.set(event.pageX, event.pageY)
+  }
+
+  _getSecondPointerPosition(event) {
+    const pointerId = (event.pointerId === this._pointers[0])
+      ? this._pointers[1]
+      : this._pointers[0]
+    return this._pointerPositions[pointerId]
   }
 
   _handleMouseWheel(event) {

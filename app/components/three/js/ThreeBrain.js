@@ -59,8 +59,8 @@ export default class ThreeBrain {
     renderer.setClearColor(0x000000, 1.0)
     scene = new THREE.Scene()
 
-    // マウスイベント
-    renderer.domElement.addEventListener('mousemove', this.mouseMove.bind(this), false);
+    // ポインターイベント（マウス・タッチ両対応）
+    renderer.domElement.addEventListener('pointermove', this.pointerMove.bind(this), false);
   }
 
   getContainerSize() {
@@ -277,12 +277,16 @@ export default class ThreeBrain {
     controls.handleResize()
   }
 
-  mouseMove(e) {
+  pointerMove(e) {
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
     const { width, height } = this.getContainerSize()
 
-    e.preventDefault();
+    // タッチイベントの場合はスクロール防止
+    if (e.pointerType === 'touch') {
+      e.preventDefault()
+    }
+
     mouse.x = ( e.clientX / width ) * 2 - 1
     mouse.y = - ( e.clientY / height ) * 2 + 1
     const vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera)
