@@ -332,7 +332,20 @@ export default class ThreeBrain {
   }
 
   mouseClick(e) {
-    if(targets.length > 0) {
+    // タップ/クリック位置で新たにレイキャストを実行
+    const raycaster = new THREE.Raycaster()
+    const mouse = new THREE.Vector2()
+    const { width, height } = this.getContainerSize()
+
+    mouse.x = (e.clientX / width) * 2 - 1
+    mouse.y = -(e.clientY / height) * 2 + 1
+    const vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera)
+    raycaster.set(camera.position, vector.sub(camera.position).normalize())
+
+    const intersects = raycaster.intersectObjects(pickingMode ? mastaba : polyArray, true)
+
+    if (intersects.length > 0) {
+      targets = intersects
       if (pickingMode) {
         this.createRegion()
       } else if (targets[0].object.name !== "point0") {
