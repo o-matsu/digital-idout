@@ -1,12 +1,12 @@
 <template>
   <v-app dark>
     <v-app-bar :clipped-left="clipped" fixed app>
-      <v-toolbar-title>{{ title }}</v-toolbar-title>
-      <v-spacer />
+      <v-toolbar-title class="d-none d-sm-block">{{ title }}</v-toolbar-title>
+      <v-spacer class="d-none d-sm-flex" />
       <div>
         <v-tooltip location="bottom">
           <template #activator="{ props }">
-            <v-btn icon v-bind="props" @click="showRegions = !showRegions">
+            <v-btn icon size="small" v-bind="props" @click="showRegions = !showRegions">
               <v-icon>{{ showRegions ? 'mdi-eye-off' : 'mdi-eye' }}</v-icon>
             </v-btn>
           </template>
@@ -16,6 +16,7 @@
           <template #activator="{ props }">
             <v-btn
               icon
+              size="small"
               :disabled="!isAuth"
               v-bind="props"
               :to="{ name: 'register' }"
@@ -27,7 +28,7 @@
         </v-tooltip>
         <v-tooltip location="bottom">
           <template #activator="{ props }">
-            <v-btn icon disabled v-bind="props">
+            <v-btn icon size="small" disabled v-bind="props">
               <v-icon>mdi-layers-triple</v-icon>
             </v-btn>
           </template>
@@ -35,12 +36,13 @@
         </v-tooltip>
       </div>
       <v-spacer />
-      <v-btn v-if="!isAuth" text @click="signIn">Sign in</v-btn>
+      <v-btn v-if="!isAuth" text size="small" @click="signIn">Sign in</v-btn>
       <v-menu v-else offset-y>
         <template #activator="{ props }">
-          <v-btn text v-bind="props">
-            <v-chip label outlined size="x-small">{{ user.role }}</v-chip>
-            <span>{{ user.name }}</span>
+          <v-btn text size="small" v-bind="props">
+            <v-icon class="d-sm-none">mdi-account-circle</v-icon>
+            <v-chip class="d-none d-sm-inline-flex" label outlined size="x-small">{{ user.role }}</v-chip>
+            <span class="d-none d-sm-inline">{{ user.name }}</span>
           </v-btn>
         </template>
         <v-list>
