@@ -259,6 +259,17 @@ export default class ThreeBrain {
       line.add(mesh);
     })
 
+    // ONモードの場合は描画後にポリゴンを表示
+    if (regionsViewFlag) {
+      polyArray.forEach(poly => {
+        poly.material.visible = true
+        poly.parent.material.visible = true
+        poly.parent.material.color.setHex(0x0000ff)
+      })
+    }
+    // polyArrayが再作成されたため、古いtargetsは無効
+    targets = []
+
     console.log(scene)
   }
 
