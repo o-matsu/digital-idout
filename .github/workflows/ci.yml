@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - master
+      - migration/nuxt3
   pull_request:
     branches:
       - main
       - master
+      - migration/nuxt3
 
 jobs:
   ci:
