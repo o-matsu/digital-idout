@@ -76,7 +76,7 @@ export default class ThreeBrain {
   }
 
   initLight() {
-    const ambientLight = new THREE.AmbientLight(0xffffff)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.0)
     scene.add(ambientLight)
   }
 
