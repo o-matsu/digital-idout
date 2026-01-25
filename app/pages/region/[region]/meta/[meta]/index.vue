@@ -4,14 +4,14 @@
       v-if="dataViewerDrawer"
       class="drawer-backdrop"
       @click="dataViewerDrawer = false"
-    ></div>
+    />
     <v-navigation-drawer
       v-model="dataViewerDrawer"
       location="right"
       :width="360"
       color="grey-darken-3"
     >
-    <template v-slot:prepend>
+    <template #prepend>
       <div class="pa-2 d-flex justify-space-between">
         <h1>Data Detail</h1>
         <v-btn
@@ -56,9 +56,8 @@
             </div>
             <v-card-title
               class="text-h5 pt-0 d-inline-block text-truncate"
-              v-text="file.name"
               style="max-width: 200px"
-            ></v-card-title>
+            >{{ file.name }}</v-card-title>
           </div>
 
           <v-avatar
@@ -67,13 +66,13 @@
             size="111"
             tile
           >
-            <v-img :src="file.src"></v-img>
+            <v-img :src="file.src"/>
           </v-avatar>
         </div>
       </v-card>
     </div>
 
-    <template v-if="isAuthor" v-slot:append>
+    <template v-if="isAuthor" #append>
       <div class="pa-2">
         <v-btn block color="red" @click="deleteMeta">
           <v-icon>mdi-delete</v-icon>

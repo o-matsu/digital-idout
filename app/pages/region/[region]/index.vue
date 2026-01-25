@@ -4,14 +4,14 @@
       v-if="dataViewerDrawer"
       class="drawer-backdrop"
       @click="dataViewerDrawer = false"
-    ></div>
+    />
     <v-navigation-drawer
       v-model="dataViewerDrawer"
       location="right"
       :width="360"
       color="grey-darken-3"
     >
-    <template v-slot:prepend>
+    <template #prepend>
       <div class="pa-2 d-flex justify-space-between">
         <h1>Data list</h1>
         <v-btn icon @click="dataViewerDrawer = false">
@@ -23,11 +23,11 @@
 
     <v-row class="pa-4">
       <v-col v-for="(meta, i) in metas" :key="i" cols="12">
-        <MetaCard :data="meta.data" :id="meta.id" />
+        <MetaCard :id="meta.id" :data="meta.data" />
       </v-col>
     </v-row>
 
-    <template v-slot:append>
+    <template #append>
       <div class="pa-2">
         <v-btn
           block

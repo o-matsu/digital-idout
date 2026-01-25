@@ -16,9 +16,8 @@
         </div>
         <v-card-title
           class="text-h5 pt-0 d-inline-block text-truncate"
-          v-text="data.title"
           style="max-width: 200px"
-        ></v-card-title>
+        >{{ data.title }}</v-card-title>
         <v-card-subtitle class="text-grey-lighten-5 mb-4">
           <div class="text-truncate" style="max-width: 200px">
             {{ getUserName(data.authorId) }}
@@ -28,7 +27,7 @@
       </div>
 
       <v-avatar v-if="data.files.length" class="ma-3" size="111" tile>
-        <v-img :src="data.files[0].src"></v-img>
+        <v-img :src="data.files[0].src"/>
       </v-avatar>
     </div>
   </v-card>

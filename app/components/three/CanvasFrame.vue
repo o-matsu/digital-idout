@@ -1,6 +1,6 @@
 <template>
   <section class="artwork" @click="handleClick">
-    <canvas class="artwork__canvas" ref="canvas"></canvas>
+    <canvas ref="canvas" class="artwork__canvas"/>
   </section>
 </template>
 

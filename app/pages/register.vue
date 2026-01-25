@@ -5,7 +5,7 @@
     :width="width"
     color="grey-darken-3"
   >
-    <template v-slot:prepend>
+    <template #prepend>
       <div class="pa-2 d-flex justify-space-between">
         <h1>Data registration</h1>
         <v-btn icon @click="jumpRoot">
@@ -24,8 +24,8 @@
         <small class="text-grey">
           Point vertices of the region counterclockwise.
         </small>
-        <template v-slot:actions>
-          <span></span>
+        <template #actions>
+          <span/>
         </template>
       </v-stepper-vertical-item>
 
@@ -36,25 +36,25 @@
       >
         <v-form ref="formRef" v-model="valid" lazy-validation>
           <v-text-field
-            label="TITLE"
             v-model="meta.title"
+            label="TITLE"
             :rules="requiredRule"
           />
           <v-select
+            v-model="meta.target"
             :items="securityOptions"
             label="SECURITY"
-            v-model="meta.target"
             :rules="requiredRule"
-          ></v-select>
+          />
           <v-textarea
+            v-model="meta.comment"
             label="DESCRIPTION"
             rows="3"
-            v-model="meta.comment"
             :rules="requiredRule"
           />
         </v-form>
-        <template v-slot:actions>
-          <v-btn color="primary" @click="goThird" :disabled="!valid">
+        <template #actions>
+          <v-btn color="primary" :disabled="!valid" @click="goThird">
             Continue
           </v-btn>
         </template>
@@ -66,13 +66,13 @@
         title="Upload data files"
       >
         <v-file-input
+          v-model="files"
           chips
           multiple
           label="select files"
           accept="image/*, application/pdf"
-          v-model="files"
-        ></v-file-input>
-        <template v-slot:actions>
+        />
+        <template #actions>
           <v-btn color="primary" @click="submit">Submit</v-btn>
         </template>
       </v-stepper-vertical-item>
@@ -94,7 +94,7 @@ const firebaseStore = useFirebaseStore()
 const { on, off } = useEventBus()
 
 // Template ref for form
-const formRef = ref<any>(null)
+const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
 
 // Data
 const drawer = ref(true)
@@ -113,7 +113,7 @@ const meta = ref({
   comment: ''
 })
 const files = ref<File[]>([])
-const requiredRule = [(v: any) => !!v || 'required']
+const requiredRule = [(v: string | null) => !!v || 'required']
 
 // Watchers
 watch(step, (val) => {

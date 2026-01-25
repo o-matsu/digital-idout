@@ -13,21 +13,22 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "nuxt": "^4.3.0",
-    "vue": "^3.5.13",
-    "pinia": "^2.3.0",
     "@pinia/nuxt": "^0.8.0",
-    "firebase": "^11.1.0",
-    "vuefire": "^3.2.2",
-    "nuxt-vuefire": "^1.0.4",
     "date-fns": "^4.1.0",
-    "mitt": "^3.0.1"
+    "firebase": "^11.1.0",
+    "mitt": "^3.0.1",
+    "nuxt": "^4.3.0",
+    "nuxt-vuefire": "^1.0.4",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vuefire": "^3.2.2"
   },
   "devDependencies": {
     "@nuxt/eslint": "^0.7.4",
     "@vite-pwa/nuxt": "^0.10.6",
-    "vuetify-nuxt-module": "^0.19.3",
+    "eslint": "^9.39.2",
     "sass": "^1.83.1",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vuetify-nuxt-module": "^0.19.3"
   }
 }

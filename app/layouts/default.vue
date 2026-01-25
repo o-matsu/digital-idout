@@ -1,11 +1,11 @@
 <template>
   <v-app dark>
     <v-app-bar :clipped-left="clipped" fixed app>
-      <v-toolbar-title v-text="title" />
+      <v-toolbar-title>{{ title }}</v-toolbar-title>
       <v-spacer />
       <div>
         <v-tooltip location="bottom">
-          <template v-slot:activator="{ props }">
+          <template #activator="{ props }">
             <v-btn icon v-bind="props" @click="showRegions = !showRegions">
               <v-icon>{{ showRegions ? 'mdi-eye-off' : 'mdi-eye' }}</v-icon>
             </v-btn>
@@ -13,7 +13,7 @@
           <span>Switch view mode</span>
         </v-tooltip>
         <v-tooltip location="bottom">
-          <template v-slot:activator="{ props }">
+          <template #activator="{ props }">
             <v-btn
               icon
               :disabled="!isAuth"
@@ -26,7 +26,7 @@
           <span>Data registration</span>
         </v-tooltip>
         <v-tooltip location="bottom">
-          <template v-slot:activator="{ props }">
+          <template #activator="{ props }">
             <v-btn icon disabled v-bind="props">
               <v-icon>mdi-layers-triple</v-icon>
             </v-btn>
@@ -37,7 +37,7 @@
       <v-spacer />
       <v-btn v-if="!isAuth" text @click="signIn">Sign in</v-btn>
       <v-menu v-else offset-y>
-        <template v-slot:activator="{ props }">
+        <template #activator="{ props }">
           <v-btn text v-bind="props">
             <v-chip label outlined size="x-small">{{ user.role }}</v-chip>
             <span>{{ user.name }}</span>
@@ -117,7 +117,7 @@ const signOut = async () => {
   try {
     await firebaseSignOut(auth)
     firebaseStore.resetStore()
-  } catch (error) {
+  } catch {
     console.log('failed logout')
   }
 }

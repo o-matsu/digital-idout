@@ -2,12 +2,12 @@ import mitt, { type Emitter } from 'mitt'
 
 // Define event types
 type Events = {
-  PICK_REGIONS: any[]
-  DRAW_REGIONS: any[]
+  PICK_REGIONS: unknown[]
+  DRAW_REGIONS: unknown[]
   TOGGLE_REGIONS_VIEW: boolean
   MOUSE_CLICK: MouseEvent
   TOGGLE_PICKING_MODE: boolean
-  REGISTER_SECOND_STEP: any[]
+  REGISTER_SECOND_STEP: unknown[]
 }
 
 // Create a singleton event bus
