@@ -81,13 +81,20 @@ export default class ThreeBrain {
   }
 
   initObject() {
+    // Helper function to load texture with correct color space
+    const loadTexture = (path) => {
+      const texture = textureLoader.load(path)
+      texture.colorSpace = THREE.SRGBColorSpace
+      return texture
+    }
+
     // load Scan model
     const loader = new LegacyJSONLoader()
     loader.load(
       '/models/north_tex.json',
       (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: textureLoader.load('/models/north_texture.png'),
+          map: loadTexture('/models/north_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
@@ -99,7 +106,7 @@ export default class ThreeBrain {
       '/models/east_tex.json',
       (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: textureLoader.load('/models/east_texture.png'),
+          map: loadTexture('/models/east_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
@@ -111,7 +118,7 @@ export default class ThreeBrain {
       '/models/ceiling_tex.json',
       (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: textureLoader.load('/models/ceiling_texture.png'),
+          map: loadTexture('/models/ceiling_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
@@ -123,7 +130,7 @@ export default class ThreeBrain {
       '/models/south_tex.json',
       (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: textureLoader.load('/models/south_texture.png'),
+          map: loadTexture('/models/south_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
@@ -135,7 +142,7 @@ export default class ThreeBrain {
       '/models/west_tex.json',
       (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: textureLoader.load('/models/west_texture.png'),
+          map: loadTexture('/models/west_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
