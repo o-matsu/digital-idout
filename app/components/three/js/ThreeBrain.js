@@ -1,8 +1,9 @@
 // import Common from './Common'
 // import Shape from './Shape'
-import THREE from './lib/three_r70.min.js'
+import * as THREE from 'three'
 import { eventBus } from '~/composables/useEventBus'
-import './lib/myFirstPersonControls2.js'
+import { CustomFirstPersonControls } from './controls/CustomFirstPersonControls.js'
+import { LegacyJSONLoader } from './loaders/LegacyJSONLoader.js'
 
 let renderer
 let scene
@@ -18,8 +19,9 @@ let _pointArray = [], pointArray = [], lineArray = []
 const mastaba = []
 const polyArray = []
 const clock = new THREE.Clock()
-const discTexture = THREE.ImageUtils.loadTexture( '/img/disc.png' );
-const offset = 0.5;
+const textureLoader = new THREE.TextureLoader()
+const discTexture = textureLoader.load('/img/disc.png')
+const offset = 0.5
 
 
 // three.jsの処理を書いていく
@@ -55,12 +57,6 @@ export default class ThreeBrain {
     renderer.setClearColor(0x000000, 1.0)
     scene = new THREE.Scene()
 
-    // メニューリサイズ
-    // $('#menu-left').height('100%');
-    // $('#menu-left').children().height('100%');
-    // $('#menu-right').height('100%');
-    // $('#menu-right').children().height('100%');
-
     // マウスイベント
     renderer.domElement.addEventListener('mousemove', this.mouseMove.bind(this), false);
   }
@@ -74,7 +70,7 @@ export default class ThreeBrain {
     )
     camera.up.set(0, 1, 0)
 
-    controls = new THREE.FirstPersonControls(camera, $canvas)
+    controls = new CustomFirstPersonControls(camera, $canvas)
     controls.movementSpeed = 10
     controls.lookSpeed = 0.2
   }
@@ -86,93 +82,79 @@ export default class ThreeBrain {
 
   initObject() {
     // load Scan model
-    const loader = new THREE.JSONLoader(true)
+    const loader = new LegacyJSONLoader()
     loader.load(
       '/models/north_tex.json',
-      function (geometry, materials) {
+      (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: THREE.ImageUtils.loadTexture('/models/north_texture.png'),
+          map: textureLoader.load('/models/north_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
         mastaba[0] = mesh
         scene.add(mastaba[0])
-      },
-      '/models/',
+      }
     )
     loader.load(
       '/models/east_tex.json',
-      function (geometry, materials) {
+      (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: THREE.ImageUtils.loadTexture('/models/east_texture.png'),
+          map: textureLoader.load('/models/east_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
         mastaba[1] = mesh
         scene.add(mastaba[1])
-      },
-      '/models/',
+      }
     )
     loader.load(
       '/models/ceiling_tex.json',
-      function (geometry, materials) {
+      (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: THREE.ImageUtils.loadTexture('/models/ceiling_texture.png'),
+          map: textureLoader.load('/models/ceiling_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
         mastaba[2] = mesh
         scene.add(mastaba[2])
-      },
-      '/models/',
+      }
     )
     loader.load(
       '/models/south_tex.json',
-      function (geometry, materials) {
+      (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: THREE.ImageUtils.loadTexture('/models/south_texture.png'),
+          map: textureLoader.load('/models/south_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
         mastaba[3] = mesh
         scene.add(mastaba[3])
-      },
-      '/models/',
+      }
     )
     loader.load(
       '/models/west_tex.json',
-      function (geometry, materials) {
+      (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
-          map: THREE.ImageUtils.loadTexture('/models/west_texture.png'),
+          map: textureLoader.load('/models/west_texture.png'),
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
         mastaba[4] = mesh
         scene.add(mastaba[4])
-      },
-      '/models/',
+      }
     )
     // 床
     loader.load(
       '/models/floor.json',
-      function (geometry, materials) {
+      (geometry, materials) => {
         const material = new THREE.MeshPhongMaterial({
           wireframe: true,
         })
         const mesh = new THREE.Mesh(geometry, material)
         mesh.scale.set(20, 20, 20)
         scene.add(mesh)
-      },
-      '/models/',
+      }
     )
-    // // テクスチャ切替用モデル
-    // loader.load('res/north_orthoB.json', function (geometry, materials) {
-    //   layerModel_init(geometry, materials, 0)
-    // })
-
-    // loader.load('res/east_ortho.json', function (geometry, materials) {
-    //   layerModel_init(geometry, materials, 1)
-    // })
   }
 
   // drawRegions(_json, mmode) {
@@ -186,17 +168,25 @@ export default class ThreeBrain {
     polyArray.length = 0 // 配列をクリア
 
     const edgeArray = []
-    const offset = 0.5
+    const localOffset = 0.5
     regions.forEach(region => {
-      const edges = new THREE.Geometry()
+      // Create line geometry using BufferGeometry
       const vertices = region.data.points.map(point => {
         return new THREE.Vector3(point.x, point.y, point.z)
       })
-      vertices.forEach(vertex => {
-        edges.vertices.push(vertex)
+
+      // Create positions array for line (closed loop)
+      const linePositions = []
+      vertices.forEach(v => {
+        linePositions.push(v.x, v.y, v.z)
       })
-      edges.vertices.push(vertices[0])
-      const line = new THREE.Line(edges, new THREE.LineBasicMaterial({
+      // Close the loop
+      linePositions.push(vertices[0].x, vertices[0].y, vertices[0].z)
+
+      const lineGeometry = new THREE.BufferGeometry()
+      lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3))
+
+      const line = new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({
         color : 0xff0000,
         opacity : 0.5,
         linewidth : 10,
@@ -206,13 +196,26 @@ export default class ThreeBrain {
       edgeArray.push(line)
       scene.add(line)
 
-      const targetRegion = new THREE.Geometry()
-      targetRegion.vertices = edges.vertices
-      for(let j = 0; j < targetRegion.vertices.length - 3; j++){
-        targetRegion.faces.push(new THREE.Face3(0, j + 1, j + 2))
+      // Create mesh geometry for the polygon
+      const meshPositions = []
+      const meshIndices = []
+
+      // Add all vertices
+      vertices.forEach(v => {
+        meshPositions.push(v.x, v.y, v.z)
+      })
+
+      // Create triangle fan indices (0, 1, 2), (0, 2, 3), (0, 3, 4), ...
+      for (let j = 0; j < vertices.length - 2; j++) {
+        meshIndices.push(0, j + 1, j + 2)
       }
-      targetRegion.computeFaceNormals()
-      const mesh = new THREE.Mesh(targetRegion, new THREE.MeshBasicMaterial({
+
+      const meshGeometry = new THREE.BufferGeometry()
+      meshGeometry.setAttribute('position', new THREE.Float32BufferAttribute(meshPositions, 3))
+      meshGeometry.setIndex(meshIndices)
+      meshGeometry.computeVertexNormals()
+
+      const mesh = new THREE.Mesh(meshGeometry, new THREE.MeshBasicMaterial({
         color : 0xffddaa,
         transparent : true,
         opacity : 0.2,
@@ -220,19 +223,23 @@ export default class ThreeBrain {
       }))
       polyArray.push(mesh)
 
-      // 法線方向へoffsetだけずらす // // //
+      // Get face normal from computed normals
+      const normalAttribute = meshGeometry.getAttribute('normal')
+      const normal = new THREE.Vector3(
+        normalAttribute.getX(0),
+        normalAttribute.getY(0),
+        normalAttribute.getZ(0)
+      )
+
+      // 法線方向へoffsetだけずらす
       line.position.set(
-        line.position.x + offset * mesh.geometry.faces[0].normal.x,
-        line.position.y + offset * mesh.geometry.faces[0].normal.y,
-        line.position.z + offset * mesh.geometry.faces[0].normal.z
-        )
+        line.position.x + localOffset * normal.x,
+        line.position.y + localOffset * normal.y,
+        line.position.z + localOffset * normal.z
+      )
       mesh.name = region.id
       line.add(mesh);
     })
-    // if (mmode == 1) {
-    //   console.log(polyArray);
-    //   successCreT2(polyArray[_json.length - 1]);
-    // }
 
     console.log(scene)
   }
@@ -248,11 +255,11 @@ export default class ThreeBrain {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize(window.innerWidth, window.innerHeight)
+    controls.handleResize()
   }
 
   mouseMove(e) {
     const raycaster = new THREE.Raycaster()
-    // const targets = null
     const mouse = new THREE.Vector2()
 
     e.preventDefault();
@@ -265,7 +272,6 @@ export default class ThreeBrain {
     // その他のモード：ピッキング対象を領域に
     const intersects = raycaster.intersectObjects(pickingMode ? mastaba : polyArray, true)
 
-    // if ($('#button_createtarget').hasClass('active')) {
     if (pickingMode) {
       if (intersects.length) {
         targets = intersects;
@@ -280,7 +286,6 @@ export default class ThreeBrain {
       } else if (!intersects.length) {
         targets = []
       }
-    // }else if ($('#form_back').css('display') == 'none' && $('#infobox').css('display') == 'none' && infoload == 1) {
     } else {
       if (intersects.length > 0) {
         if (!targets.length) {
@@ -343,9 +348,6 @@ export default class ThreeBrain {
 		if (regionsViewFlag) {
 			if (targets.length){
 				this.showTargets(targets)
-				// if($('#form_back').css('display') != 'none'){
-				// 	targetTopColor();
-				// }
 			}
       polyArray.forEach(poly => {
 				poly.material.visible = true
@@ -362,16 +364,15 @@ export default class ThreeBrain {
           target.object.parent.material.color.setHex(0xff0000)
         })
 				this.showTargets(targets)
-				// if($('#form_back').css('display') != 'none'){
-				// 	targetTopColor();
-				// }
 			}
 		}
   }
+
   togglePickingMode(flag) {
     pickingMode = flag
     this.resetCreateTarget()
   }
+
   createRegion() {
     // ピッキング成功 & 入力受付中（処理中でない）
     console.log(targets)
@@ -384,10 +385,17 @@ export default class ThreeBrain {
       }
       // 再び最初の点が選ばれた時　－　終了
       if(targets[0].object.name == "point0" && count > 2 && point0_state > 0){
-        // 線を描く
-        var lg = new THREE.Geometry();
-        lg.vertices.push(_pointArray[count - 1].position);
-        lg.vertices.push(_pointArray[0].position);
+        // 線を描く using BufferGeometry
+        const positions = [
+          _pointArray[count - 1].position.x,
+          _pointArray[count - 1].position.y,
+          _pointArray[count - 1].position.z,
+          _pointArray[0].position.x,
+          _pointArray[0].position.y,
+          _pointArray[0].position.z
+        ]
+        const lg = new THREE.BufferGeometry()
+        lg.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
         lineArray[count] = new THREE.Line(lg, new THREE.LineBasicMaterial({
           color : 0xff0000,
           opacity : 0.5,
@@ -405,25 +413,24 @@ export default class ThreeBrain {
         }
       }
       else{
-        // 点を描く
-        var geometry = new THREE.Geometry();
-        var vertex = new THREE.Vector3();
-        geometry.vertices.push(vertex);
-        var material = new THREE.PointCloudMaterial({map: discTexture, transparent: true, size: 3.0});
-        _point = new THREE.PointCloud(geometry, material);
+        // 点を描く using BufferGeometry and Points
+        const geometry = new THREE.BufferGeometry()
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3))
+        const material = new THREE.PointsMaterial({map: discTexture, transparent: true, size: 3.0})
+        _point = new THREE.Points(geometry, material)
 
         console.log(targets);
-        var k = 0;
+        let k = 0;
         if(targets[0].face == null)
           k = 1;
-        var normal = targets[k].face.normal;
+        const normal = targets[k].face.normal;
         console.log(targets[k].point);
         console.log(normal);
         _point.position.set(
           targets[k].point.x + offset * normal.x,
           targets[k].point.y + offset * normal.y,
           targets[k].point.z + offset * normal.z
-          );
+        );
         _point.name = 'point' + count;
         _pointArray[count] = _point;
         mastaba.push(_point);
@@ -433,9 +440,16 @@ export default class ThreeBrain {
 
         // 2回目以降　ー　線を描く
         if (count > 0) {
-          var lg = new THREE.Geometry();
-          lg.vertices.push(_pointArray[count - 1].position);
-          lg.vertices.push(_pointArray[count].position);
+          const positions = [
+            _pointArray[count - 1].position.x,
+            _pointArray[count - 1].position.y,
+            _pointArray[count - 1].position.z,
+            _pointArray[count].position.x,
+            _pointArray[count].position.y,
+            _pointArray[count].position.z
+          ]
+          const lg = new THREE.BufferGeometry()
+          lg.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
           lineArray[count - 1] = new THREE.Line(lg, new THREE.LineBasicMaterial({
             color : 0xff0000,
             opacity : 0.5,
@@ -449,6 +463,7 @@ export default class ThreeBrain {
       }
     }
   }
+
   resetCreateTarget() {
     pointArray.forEach((point, i) => {
       scene.remove(point)
