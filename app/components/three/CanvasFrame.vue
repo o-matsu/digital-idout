@@ -1,5 +1,5 @@
 <template>
-  <section class="artwork" @click="handleClick">
+  <section class="artwork">
     <canvas ref="canvas" class="artwork__canvas"/>
   </section>
 </template>
@@ -17,11 +17,6 @@ let threeBrain: ThreeBrain | null = null
 
 // Computed
 const regions = computed(() => firebaseStore.getRegions)
-
-// Methods
-const handleClick = (e: MouseEvent) => {
-  emit('MOUSE_CLICK', e)
-}
 
 // Lifecycle
 onMounted(() => {
@@ -44,7 +39,7 @@ onUnmounted(() => {
 
 // Watchers - リージョンが変更されたら描画（ただしThreeBrain初期化後のみ）
 watch(regions, (val) => {
-  if (threeBrain && val && val.length > 0) {
+  if (threeBrain && val) {
     console.log('CanvasFrame: regions changed, emitting DRAW_REGIONS', val)
     emit('DRAW_REGIONS', val)
   }
