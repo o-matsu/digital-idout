@@ -57,7 +57,7 @@ export const useAuthStore = defineStore('auth', {
       this.authUser.role = storeUser.role
     },
 
-    async onAuthStateChanged(authUser: any) {
+    async onAuthStateChanged(authUser: { uid: string; email: string; displayName: string; photoURL: string; getIdToken?: () => Promise<string> } | null) {
       // リージョン再読み込み用にfirebaseStoreをインポート
       const { useFirebaseStore } = await import('./firebase')
       const firebaseStore = useFirebaseStore()

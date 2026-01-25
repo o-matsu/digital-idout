@@ -1,5 +1,5 @@
 <template>
-  <v-row></v-row>
+  <v-row/>
 </template>
 
 <script setup lang="ts">
@@ -14,7 +14,7 @@ const { on, off } = useEventBus()
 await useAsyncData('regions', () => firebaseStore.loadRoleRegions())
 
 // Event handling
-const pickRegions = (targets: any[]) => {
+const pickRegions = (targets: Array<{ object: { name: string } }>) => {
   router.push({
     name: 'region-region',
     params: { region: targets[0].object.name }

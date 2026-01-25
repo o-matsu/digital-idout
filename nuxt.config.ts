@@ -8,7 +8,8 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'vuetify-nuxt-module',
     '@vite-pwa/nuxt',
-    'nuxt-vuefire'
+    'nuxt-vuefire',
+    '@nuxt/eslint',
   ],
 
   // VueFire/Firebase configuration
