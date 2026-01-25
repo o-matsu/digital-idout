@@ -1,10 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  // Enable Nuxt 4 compatibility mode
-  future: {
-    compatibilityVersion: 4
-  },
-
   // Disable server-side rendering (matches Nuxt 2 config)
   ssr: false,
 
