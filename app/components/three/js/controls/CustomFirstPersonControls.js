@@ -18,7 +18,8 @@ const STATE = {
   DOLLY: 1,
   PAN: 2,
   TOUCH_ROTATE: 3,
-  TOUCH_DOLLY: 4
+  TOUCH_DOLLY: 4,
+  TOUCH_PAN: 5
 }
 
 class CustomFirstPersonControls {
@@ -36,6 +37,7 @@ class CustomFirstPersonControls {
     // Touch settings
     this.touchRotateSpeed = 25
     this.touchZoomSpeed = 0.5
+    this.touchPanSpeed = 1.0
 
     this.lookVertical = true
     this.autoForward = false
@@ -220,15 +222,28 @@ class CustomFirstPersonControls {
       this.mouseDragOn = false
       this._mouseX = 0
       this._mouseY = 0
-    } else if (this._pointers.length === 1 && event.pointerType === 'touch') {
-      // Going from 2 fingers to 1 - switch back to rotate
-      const pointerId = this._pointers[0]
-      const position = this._pointerPositions[pointerId]
-      if (position) {
-        this._state = STATE.TOUCH_ROTATE
-        this._dragDistance = 0
-        this._prevMouseX = position.x - this.domElement.offsetLeft - this._viewHalfX
-        this._prevMouseY = position.y - this.domElement.offsetTop - this._viewHalfY
+    } else if (event.pointerType === 'touch') {
+      if (this._pointers.length === 2) {
+        // Going from 3 fingers to 2 - switch to dolly
+        this._state = STATE.TOUCH_DOLLY
+        const pos1 = this._pointerPositions[this._pointers[0]]
+        const pos2 = this._pointerPositions[this._pointers[1]]
+        if (pos1 && pos2) {
+          const dx = pos1.x - pos2.x
+          const dy = pos1.y - pos2.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          this._dollyStart.set(0, distance)
+        }
+      } else if (this._pointers.length === 1) {
+        // Going from 2 fingers to 1 - switch back to rotate
+        const pointerId = this._pointers[0]
+        const position = this._pointerPositions[pointerId]
+        if (position) {
+          this._state = STATE.TOUCH_ROTATE
+          this._dragDistance = 0
+          this._prevMouseX = position.x - this.domElement.offsetLeft - this._viewHalfX
+          this._prevMouseY = position.y - this.domElement.offsetTop - this._viewHalfY
+        }
       }
     }
   }
@@ -311,6 +326,11 @@ class CustomFirstPersonControls {
         const distance = Math.sqrt(dx * dx + dy * dy)
         this._dollyStart.set(0, distance)
       }
+    } else if (this._pointers.length >= 3) {
+      // Three fingers - pan
+      this._state = STATE.TOUCH_PAN
+      const center = this._getTouchCenter()
+      this._panStart.set(center.x, center.y)
     }
 
     this.mouseDragOn = true
@@ -348,6 +368,14 @@ class CustomFirstPersonControls {
 
         this._dollyStart.copy(this._dollyEnd)
       }
+    } else if (this._state === STATE.TOUCH_PAN) {
+      const center = this._getTouchCenter()
+      this._panEnd.set(center.x, center.y)
+      this._panDelta.subVectors(this._panEnd, this._panStart).multiplyScalar(this.touchPanSpeed)
+
+      this._doPan(this._panDelta.x, this._panDelta.y)
+
+      this._panStart.copy(this._panEnd)
     }
   }
 
@@ -379,6 +407,24 @@ class CustomFirstPersonControls {
       ? this._pointers[1]
       : this._pointers[0]
     return this._pointerPositions[pointerId]
+  }
+
+  _getTouchCenter() {
+    let x = 0, y = 0
+    let count = 0
+    for (const pointerId of this._pointers) {
+      const position = this._pointerPositions[pointerId]
+      if (position) {
+        x += position.x
+        y += position.y
+        count++
+      }
+    }
+    if (count > 0) {
+      x /= count
+      y /= count
+    }
+    return { x, y }
   }
 
   _handleMouseWheel(event) {
