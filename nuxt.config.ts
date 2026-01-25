@@ -89,6 +89,13 @@ export default defineNuxtConfig({
     shim: false
   },
 
+  // Vite configuration
+  vite: {
+    server: {
+      allowedHosts: true
+    }
+  },
+
   // Compatibility date for Nuxt 4
   compatibilityDate: '2025-01-24'
 })
