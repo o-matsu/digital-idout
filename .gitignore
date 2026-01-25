@@ -88,3 +88,9 @@ sw.*
 
 # Vim swap files
 *.swp
+
+# Claude Code
+.claude/
+
+# Nuxt build output
+.output/
