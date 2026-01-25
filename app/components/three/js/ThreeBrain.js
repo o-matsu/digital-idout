@@ -359,10 +359,11 @@ export default class ThreeBrain {
       targets.forEach(target => {
         target.object.material.visible = true
         target.object.parent.material.visible = true
+        target.object.parent.material.color.setHex(0xff0000)
       })
     }else{
       targets.forEach(target => {
-        target.object.parent.material.color.setHex(0x0000ff)
+        target.object.parent.material.color.setHex(0xff0000)
       })
     }
   }
@@ -375,7 +376,7 @@ export default class ThreeBrain {
       })
     } else {
       targets.forEach(target => {
-        target.object.parent.material.color.setHex(0xff0000);
+        target.object.parent.material.color.setHex(0x0000ff);
       })
     }
   }
@@ -383,13 +384,16 @@ export default class ThreeBrain {
   toggleRegionsView(flag) {
     regionsViewFlag = flag
 		if (regionsViewFlag) {
-			if (targets.length){
-				this.showTargets(targets)
-			}
+      // まず全てのRegionを青色（未選択）で表示
       polyArray.forEach(poly => {
 				poly.material.visible = true
 				poly.parent.material.visible = true
+        poly.parent.material.color.setHex(0x0000ff)
       })
+      // 選択中のターゲットがあれば赤色にする
+			if (targets.length){
+				this.showTargets(targets)
+			}
 		}
 		else {
       polyArray.forEach(poly => {
